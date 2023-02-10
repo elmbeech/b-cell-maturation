@@ -1,0 +1,8 @@
+# apfel
+**/.DS_Store
+**/._.DS_Store
+
+# physicell
+*.o
+*.exe
+
