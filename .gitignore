@@ -5,4 +5,6 @@
 # physicell
 *.o
 *.exe
-
+main-backup.cpp
+Makefile-backup
+PhysiCell_settings-backup.xml
