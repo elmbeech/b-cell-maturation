@@ -8,3 +8,4 @@
 main-backup.cpp
 Makefile-backup
 PhysiCell_settings-backup.xml
+pmb_debug.log
