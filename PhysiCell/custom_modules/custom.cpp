@@ -66,8 +66,11 @@
 */
 
 #include "./custom.h"
+#include <stdlib.h>
+#include <time.h>
 
 Cell_Definition* naive_bcell; 
+Cell_Definition* tfhelper_cell; 
 
 void create_cell_types( void )
 {
@@ -124,6 +127,7 @@ void create_cell_types( void )
 	cell_defaults.functions.contact_function = contact_function; 
 	
 	create_naive_bcell_type();
+	create_naive_tfhelper_cell_type();
 
 	/*
 	   This builds the map of cell definitions and summarizes the setup. 
@@ -139,7 +143,8 @@ void setup_microenvironment( void )
 	// set domain parameters 
 	
 	// put any custom code to set non-homogeneous initial conditions or 
-	// extra Dirichlet nodes here. 
+	// extra Dirichlet nodes here.
+  	srand(time(NULL));
 	
 	// initialize BioFVM 
 	
@@ -213,31 +218,36 @@ void create_naive_bcell_type( void )  {
 	std::vector<double> antibodySequence = {0, 0, 0}; 
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
 	
-	std::vector<double> foreignAntigen = {0, 1, 0}; //TODO: Should be empty by default. We need T FH cells to give the antigens. 
+	std::vector<double> foreignAntigen = {0, 0, 0}; //TODO: Should be empty by default. We need T FH cells to give the antigens. 
 	naive_bcell->custom_data.add_vector_variable( "foreignAntigen", foreignAntigen );
 
-	// printf("Initial size of vector: %d\n", naive_bcell->custom_data.vector_variables.size());
-	
 	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
+}
+
+void create_naive_tfhelper_cell_type( void )  {
+	tfhelper_cell = find_cell_definition( "Tf_helper" );
+
+	int ANTIGEN_LEN = 3;
+
+	std::vector<double> foreignAntigen = {0, 1, 0}; 
+	for (int i = 0; i < ANTIGEN_LEN; i++) {
+		foreignAntigen[i] = rand() % 2; //set as rand number 0 or 1
+		i++;
+	}
+
+	tfhelper_cell->custom_data.add_vector_variable( "foreignAntigen", foreignAntigen );
+
+	tfhelper_cell->functions.update_phenotype = tfhelper_cell_phenotype; 
 }
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	int index = pCell->custom_data.find_vector_variable_index("antibodySequence");
 	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[index];
 	printf("{%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]); 
+}
 
-
-
-
-	// double r0 = get_single_base_behavior( pCell, "cycle entry" ); 
-	// double rM = 10 * r0; 
-
-	// // sample food
-	// double food = get_single_signal( pCell , "food"); 
-
-	// // the rule relating birth rate to food 
-	// double r = r0 + ( rM - r0 ) * linear_response_function( food , 0.5 , 1 ); 
-
-	// // set hte birth rate
-	// set_single_behavior( pCell, "cycle entry" , r) ; 
+void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
+	int index = pCell->custom_data.find_vector_variable_index("foreignAntigen");
+	Vector_Variable foreignAntigen = pCell->custom_data.vector_variables[index];
+	printf("TFH antigen {%f, %f, %f}\n", foreignAntigen.value[0], foreignAntigen.value[1], foreignAntigen.value[2]); 
 }

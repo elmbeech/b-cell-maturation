@@ -9,3 +9,6 @@ main-backup.cpp
 Makefile-backup
 PhysiCell_settings-backup.xml
 pmb_debug.log
+PhysiCell-model-builder/*
+PhysiCell/output/*
+.gitignore
