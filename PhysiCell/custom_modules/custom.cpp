@@ -67,6 +67,8 @@
 
 #include "./custom.h"
 
+Cell_Definition* naive_bcell; 
+
 void create_cell_types( void )
 {
 	// set the random seed 
@@ -121,6 +123,8 @@ void create_cell_types( void )
 	cell_defaults.functions.custom_cell_rule = custom_function; 
 	cell_defaults.functions.contact_function = contact_function; 
 	
+	create_naive_bcell_type();
+
 	/*
 	   This builds the map of cell definitions and summarizes the setup. 
 	*/
@@ -202,3 +206,38 @@ void custom_function( Cell* pCell, Phenotype& phenotype , double dt )
 
 void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& phenoOther , double dt )
 { return; } 
+
+void create_naive_bcell_type( void )  {
+	naive_bcell = find_cell_definition( "B_naive" );
+	
+	std::vector<double> antibodySequence = {0, 0, 0}; 
+	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+	
+	std::vector<double> foreignAntigen = {0, 1, 0}; //TODO: Should be empty by default. We need T FH cells to give the antigens. 
+	naive_bcell->custom_data.add_vector_variable( "foreignAntigen", foreignAntigen );
+
+	// printf("Initial size of vector: %d\n", naive_bcell->custom_data.vector_variables.size());
+	
+	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
+}
+
+void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
+	int index = pCell->custom_data.find_vector_variable_index("antibodySequence");
+	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[index];
+	printf("{%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]); 
+
+
+
+
+	// double r0 = get_single_base_behavior( pCell, "cycle entry" ); 
+	// double rM = 10 * r0; 
+
+	// // sample food
+	// double food = get_single_signal( pCell , "food"); 
+
+	// // the rule relating birth rate to food 
+	// double r = r0 + ( rM - r0 ) * linear_response_function( food , 0.5 , 1 ); 
+
+	// // set hte birth rate
+	// set_single_behavior( pCell, "cycle entry" , r) ; 
+}
