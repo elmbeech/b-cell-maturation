@@ -7,5 +7,7 @@
 *.exe
 main-backup.cpp
 Makefile-backup
+output/
 PhysiCell_settings-backup.xml
+project
 pmb_debug.log

@@ -213,8 +213,8 @@ void create_naive_bcell_type( void )  {
 	std::vector<double> antibodySequence = {0, 0, 0}; 
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
 	
-	std::vector<double> foreignAntigen = {0, 1, 0}; //TODO: Should be empty by default. We need T FH cells to give the antigens. 
-	naive_bcell->custom_data.add_vector_variable( "foreignAntigen", foreignAntigen );
+	std::vector<double> antigenSequence = {0, 1, 0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
+	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
 
 	// printf("Initial size of vector: %d\n", naive_bcell->custom_data.vector_variables.size());
 	
