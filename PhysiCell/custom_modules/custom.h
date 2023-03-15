@@ -90,3 +90,5 @@ void custom_function( Cell* pCell, Phenotype& phenotype , double dt );
 
 void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& phenoOther , double dt ); 
 
+void create_naive_bcell_type( void );
+void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
