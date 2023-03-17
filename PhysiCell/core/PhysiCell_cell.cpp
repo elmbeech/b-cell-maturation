@@ -1752,9 +1752,11 @@ void display_cell_definitions( std::ostream& os )
 			os << "\t\t" << pCCD->variables[k] << std::endl; 
 		}
 		os << "\tcustom vector data: " << std::endl; 
+		//for( auto element : pCCD->vector_variables)
 		for( int k=0; k < pCCD->vector_variables.size(); k++)
 		{
-			os << "\t\t" << pCCD->vector_variables[k] << std::endl; 
+                        // bue 20230317: to be able to handle empty vectors
+			//os << "\t\t" << pCCD->variables[k] << std::endl;
 		}
 		os << "\t\t\tNOTE: custom vector data will eventually be merged with custom data" << std::endl; 
 			

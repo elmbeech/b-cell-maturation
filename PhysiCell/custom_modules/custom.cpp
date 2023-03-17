@@ -64,7 +64,7 @@
 #                                                                             #
 ###############################################################################
 */
-
+#include <typeinfo>
 #include "./custom.h"
 
 Cell_Definition* naive_bcell;
@@ -217,7 +217,7 @@ void create_naive_bcell_type( void )  {
         printf("number of antigenSequence elements: %ld\n", antigenSequence.size());
 
         // antibody variable
-	std::vector<double> antibodySequence {'A','a','0',0,2};
+	std::vector<double> antibodySequence {8,'A','a','0',0.02, 0,2};
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
         printf("number of antibodySequence elements: %ld\n", antibodySequence.size());
 
@@ -227,20 +227,21 @@ void create_naive_bcell_type( void )  {
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 
-        // antibody sequence
-	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
-	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
-	//printf("antibodySequence: {%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
-
         // antigen sequence
 	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
 	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
+        printf("number of antigenSequence elements: %ld\n", antigenSequence.value.size());
 	//printf("antigenSequence: {%f, %f, %f}\n", antigenSequence.value[0], antigenSequence.value[1], antigenSequence.value[2]);
+
+        // antibody sequence
+	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
+	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
+        printf("number of antibodySequence elements: %ld\n", antibodySequence.value.size());
+	//printf("antibodySequence: {%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
 
         // get alignment signal
         double score = alignement ( antigenSequence,  antibodySequence );
 	//printf("alignement score: {%g}\n", score);
-
 
         // get pressure signal
         double pressure = get_single_signal( pCell , "pressure");
@@ -251,7 +252,6 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         // get the response functions
         double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
         printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
-
 
         // apoptosis response
         // get min rate value for apoptosis
@@ -264,17 +264,25 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         // 60[min] * rM[1/min] = 1
         double s1Apoptosis = 0.98 / 60;
 
-
 	// rule of pressure (future: and alignment score) to steer apoptosis rate
-	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure; 
+	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
         set_single_behavior( pCell, "apoptosis" , rApoptosis );
         printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
 }
 
 double alignement( Vector_Variable antigenSequence, Vector_Variable antibodySequence ) {
 
-	//printf("do alignement antibody: {%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
-	//printf("do alignement antigen: {%f, %f, %f}\n", antigenSequence.value[0], antigenSequence.value[1], antigenSequence.value[2]);
+        printf("***antigenSequence: ");
+        for (double element : antigenSequence.value) {
+            printf("{%g}", element);
+        }
+        printf("***\n"); 
+
+        printf("***antibodySequence: ");
+        for (double element : antibodySequence.value) {
+            printf("{%g}", element);
+        }
+        printf("***\n"); 
 
         return 0.0;
 }
