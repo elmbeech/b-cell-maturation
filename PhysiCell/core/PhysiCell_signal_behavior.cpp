@@ -747,7 +747,7 @@ double get_single_signal( Cell* pCell, int index )
 	double out = 0.0; 
 	if( index < 0 )
 	{ 
-		//std::cout<< "Why would you ask for array[-1]? Why? WHY???? That's it, I quit." << std::endl;
+		std::cout<< "Why would you ask for array[-1]? Why? WHY???? That's it, I quit." << std::endl; 
 		return -9e9; 
 	}
 
