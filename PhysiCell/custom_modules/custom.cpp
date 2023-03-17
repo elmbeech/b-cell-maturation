@@ -215,7 +215,7 @@ void create_naive_bcell_type( void )  {
         long antigenLength = antigenSequence.size();
         printf("number of antigenSequence ELEMENTS: %ld\n", antigenLength);
 
-	std::vector<double> antibodySequence = {'A','a','0','1',0,1}; 
+	std::vector<double> antibodySequence = {'A','a','0','1',0,0.1,2}; 
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
         long antibodyLength = antibodySequence.size();
         printf("number of antibodySequence ELEMENTS: %ld\n", antibodyLength);
@@ -226,10 +226,23 @@ void create_naive_bcell_type( void )  {
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 
 	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
-	Vector_Variable antigensequence = pCell->custom_data.vector_variables[antigenIndex];
+	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
+        printf("number of antigenSequence elements: %ld\n", antigenSequence.value.size());
 
 	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
 	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
+        printf("number of antibodySequence elements: %ld\n", antibodySequence.value.size());
 
-	//printf("{%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
+        // print sequences
+        printf("***antigenSequence: ");
+        for (double element : antigenSequence.value) {
+            printf("{%g}", element);
+        }
+        printf("***\n");
+
+        printf("***antibodySequence: ");
+        for (double element : antibodySequence.value) {
+            printf("{%g}", element);
+        }
+        printf("***\n");
 }
