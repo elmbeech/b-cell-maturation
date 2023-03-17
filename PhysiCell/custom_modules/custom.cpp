@@ -122,9 +122,9 @@ void create_cell_types( void )
 	cell_defaults.functions.update_phenotype = phenotype_function; 
 	cell_defaults.functions.custom_cell_rule = custom_function; 
 	cell_defaults.functions.contact_function = contact_function; 
-	
-	create_naive_bcell_type();
 
+        create_naive_bcell_type();
+	
 	/*
 	   This builds the map of cell definitions and summarizes the setup. 
 	*/
@@ -209,35 +209,27 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 
 void create_naive_bcell_type( void )  {
 	naive_bcell = find_cell_definition( "B_naive" );
-	
-	std::vector<double> antibodySequence = {0, 0, 0}; 
-	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
-	
-	std::vector<double> antigenSequence = {0, 1, 0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
-	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
 
-	// printf("Initial size of vector: %d\n", naive_bcell->custom_data.vector_variables.size());
-	
+	std::vector<double> antigenSequence = {};
+	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+        long antigenLength = antigenSequence.size();
+        printf("number of antigenSequence ELEMENTS: %ld\n", antigenLength);
+
+	std::vector<double> antibodySequence = {'A','a','0','1',0,1}; 
+	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+        long antibodyLength = antibodySequence.size();
+        printf("number of antibodySequence ELEMENTS: %ld\n", antibodyLength);
+
 	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
 }
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
-	int index = pCell->custom_data.find_vector_variable_index("antibodySequence");
-	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[index];
-	printf("{%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]); 
 
+	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
+	Vector_Variable antigensequence = pCell->custom_data.vector_variables[antigenIndex];
 
+	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
+	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
 
-
-	// double r0 = get_single_base_behavior( pCell, "cycle entry" ); 
-	// double rM = 10 * r0; 
-
-	// // sample food
-	// double food = get_single_signal( pCell , "food"); 
-
-	// // the rule relating birth rate to food 
-	// double r = r0 + ( rM - r0 ) * linear_response_function( food , 0.5 , 1 ); 
-
-	// // set hte birth rate
-	// set_single_behavior( pCell, "cycle entry" , r) ; 
+	//printf("{%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
 }
