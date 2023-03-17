@@ -211,12 +211,15 @@ void create_naive_bcell_type( void )  {
 	naive_bcell = find_cell_definition( "B_naive" );
 
         // antigen variable
-	std::vector<double> antigenSequence = {0,1,0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
+	//std::vector<double> antigenSequence = {0,1,0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
+	std::vector<double> antigenSequence {}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
 	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+        printf("number of antigenSequence elements: %ld\n", antigenSequence.size());
 
         // antibody variable
-	std::vector<double> antibodySequence = {'A','a','0',0,2};
+	std::vector<double> antibodySequence {'A','a','0',0,2};
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+        printf("number of antibodySequence elements: %ld\n", antibodySequence.size());
 
         // update phenotype
 	naive_bcell->functions.update_phenotype = naive_bcell_phenotype;
