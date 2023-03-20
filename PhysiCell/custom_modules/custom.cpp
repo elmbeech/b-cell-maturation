@@ -230,36 +230,11 @@ void create_naive_bcell_type( void )  {
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 
-        // antibody sequence
-	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
-	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
-	//printf("antibodySequence: {%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
-
         // antigen sequence
 	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
 	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
+        printf("number of antigenSequence elements: %ld\n", antigenSequence.value.size());
 	//printf("antigenSequence: {%f, %f, %f}\n", antigenSequence.value[0], antigenSequence.value[1], antigenSequence.value[2]);
-
-        // get pressure signal
-        double pressure = get_single_signal( pCell , "pressure");
-        // min pressure will be 0 [?]
-        // max pressure - I have no idea. pragmatically set to 10. [?]
-        double s0Pressure {0.0};
-        double s1Pressure {10.0};
-        // get the response functions
-        double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
-        printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
-
-        // apoptosis response
-        // get min rate value for apoptosis
-        // the default rate is 5.31667e-05
-        // this means the probability to die in a 6 min time step is 6[min] * 5.31667e-05[1/min] = 0.0003190002
-        // this means the probabiliry to die in a 60 min time setp is 6[min] * 5.31667e-05[1/min] = 0.003190002 (~ 3 per mille)
-        double s0Apoptosis = get_single_base_behavior( pCell, "apoptosis" );
-        // get max rate value for apoptosis
-        // let's say, at max pressure 98% of the cells should enter apoptosis within 60 [1/min]
-        // 60[min] * rM[1/min] = 1
-        double s1Apoptosis = 0.98 / 60;
 
         // antibody sequence
 	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
