@@ -209,35 +209,57 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 
 void create_naive_bcell_type( void )  {
 	naive_bcell = find_cell_definition( "B_naive" );
-	
-	std::vector<double> antibodySequence = {0, 0, 0}; 
-	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
-	
-	std::vector<double> antigenSequence = {0, 1, 0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
+
+        // antigen variable
+	std::vector<double> antigenSequence = {0,1,0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
 	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
 
+        // antibody variable
+	std::vector<double> antibodySequence = {'A','a','0',0,2};
+	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+
 	// printf("Initial size of vector: %d\n", naive_bcell->custom_data.vector_variables.size());
-	
-	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
+
+        // update phenotype
+	naive_bcell->functions.update_phenotype = naive_bcell_phenotype;
 }
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
-	int index = pCell->custom_data.find_vector_variable_index("antibodySequence");
-	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[index];
-	printf("{%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]); 
+
+        // antibody sequence
+	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
+	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
+	//printf("antibodySequence: {%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
+
+        // antigen sequence
+	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
+	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
+	//printf("antigenSequence: {%f, %f, %f}\n", antigenSequence.value[0], antigenSequence.value[1], antigenSequence.value[2]);
+
+        // get pressure signal
+        double pressure = get_single_signal( pCell , "pressure");
+        // min pressure will be 0 [?]
+        // max pressure - I have no idea. pragmatically set to 10. [?]
+        double s0Pressure {0.0};
+        double s1Pressure {10.0};
+        // get the response functions
+        double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
+        printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
+
+        // apoptosis response
+        // get min rate value for apoptosis
+        // the default rate is 5.31667e-05
+        // this means the probability to die in a 6 min time step is 6[min] * 5.31667e-05[1/min] = 0.0003190002
+        // this means the probabiliry to die in a 60 min time setp is 6[min] * 5.31667e-05[1/min] = 0.003190002 (~ 3 per mille)
+        double s0Apoptosis = get_single_base_behavior( pCell, "apoptosis" );
+        // get max rate value for apoptosis
+        // let's say, at max pressure 98% of the cells should enter apoptosis within 60 [1/min]
+        // 60[min] * rM[1/min] = 1
+        double s1Apoptosis = 0.98 / 60;
 
 
-
-
-	// double r0 = get_single_base_behavior( pCell, "cycle entry" ); 
-	// double rM = 10 * r0; 
-
-	// // sample food
-	// double food = get_single_signal( pCell , "food"); 
-
-	// // the rule relating birth rate to food 
-	// double r = r0 + ( rM - r0 ) * linear_response_function( food , 0.5 , 1 ); 
-
-	// // set hte birth rate
-	// set_single_behavior( pCell, "cycle entry" , r) ; 
+	// rule of pressure (future: and alignment score) to steer apoptosis rate
+	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure; 
+        set_single_behavior( pCell, "apoptosis" , rApoptosis );
+        printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
 }
