@@ -208,7 +208,6 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 { return; }
 
 void create_naive_bcell_type( void )  {
-<<<<<<< HEAD
 
 	naive_bcell = find_cell_definition( "B_naive" );
 
@@ -227,24 +226,6 @@ void create_naive_bcell_type( void )  {
 
         // update phenotype
 	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
-}
-
-void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
-=======
-	naive_bcell = find_cell_definition( "B_naive" );
-
-        // antigen variable
-	std::vector<double> antigenSequence = {0,1,0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
-	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
-
-        // antibody variable
-	std::vector<double> antibodySequence = {'A','a','0',0,2};
-	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
-
-	// printf("Initial size of vector: %d\n", naive_bcell->custom_data.vector_variables.size());
-
-        // update phenotype
-	naive_bcell->functions.update_phenotype = naive_bcell_phenotype;
 }
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
