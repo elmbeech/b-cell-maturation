@@ -123,8 +123,8 @@ void create_cell_types( void )
 	cell_defaults.functions.custom_cell_rule = custom_function;
 	cell_defaults.functions.contact_function = contact_function;
 
-	create_naive_bcell_type();
-
+        create_naive_bcell_type();
+	
 	/*
 	   This builds the map of cell definitions and summarizes the setup.
 	*/
@@ -208,21 +208,24 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 { return; }
 
 void create_naive_bcell_type( void )  {
+
 	naive_bcell = find_cell_definition( "B_naive" );
 
         // antigen variable
 	//std::vector<double> antigenSequence = {0,1,0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
-	std::vector<double> antigenSequence {}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
+	std::vector<double> antigenSequence = {};
 	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
-        printf("number of antigenSequence elements: %ld\n", antigenSequence.size());
+        long antigenLength = antigenSequence.size();
+        printf("number of antigenSequence ELEMENTS: %ld\n", antigenLength);
 
         // antibody variable
-	std::vector<double> antibodySequence {8,'A','a','0',0.02, 0,2};
+	std::vector<double> antibodySequence = {'A','a','0','1',0,0.1,2}; 
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
-        printf("number of antibodySequence elements: %ld\n", antibodySequence.size());
+        long antibodyLength = antibodySequence.size();
+        printf("number of antibodySequence ELEMENTS: %ld\n", antibodyLength);
 
         // update phenotype
-	naive_bcell->functions.update_phenotype = naive_bcell_phenotype;
+	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
 }
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
@@ -238,6 +241,19 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
         printf("number of antibodySequence elements: %ld\n", antibodySequence.value.size());
 	//printf("antibodySequence: {%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
+
+        // print sequences
+        printf("***antigenSequence: ");
+        for (double element : antigenSequence.value) {
+            printf("{%g}", element);
+        }
+        printf("***\n");
+
+        printf("***antibodySequence: ");
+        for (double element : antibodySequence.value) {
+            printf("{%g}", element);
+        }
+        printf("***\n"); 
 
         // get alignment signal
         double score = alignement ( antigenSequence,  antibodySequence );
@@ -272,11 +288,12 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 
 double alignement( Vector_Variable antigenSequence, Vector_Variable antibodySequence ) {
 
+        // print sequences
         printf("***antigenSequence: ");
         for (double element : antigenSequence.value) {
             printf("{%g}", element);
         }
-        printf("***\n"); 
+        printf("***\n");
 
         printf("***antibodySequence: ");
         for (double element : antibodySequence.value) {
