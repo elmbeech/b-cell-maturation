@@ -1754,7 +1754,8 @@ void display_cell_definitions( std::ostream& os )
 		os << "\tcustom vector data: " << std::endl; 
 		for( int k=0; k < pCCD->vector_variables.size(); k++)
 		{
-			os << "\t\t" << pCCD->vector_variables[k] << std::endl; 
+			// bue 20230317: at this moment commented out because empty custom_data vector_variable will cause overflow and segementation fault.
+			//os << "\t\t" << pCCD->vector_variables[k] << std::endl; 
 		}
 		os << "\t\t\tNOTE: custom vector data will eventually be merged with custom data" << std::endl; 
 			
