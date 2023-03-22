@@ -65,6 +65,7 @@
 ###############################################################################
 */
 #include <typeinfo>
+#include <vector>
 #include "./custom.h"
 
 Cell_Definition* naive_bcell;
@@ -207,19 +208,28 @@ void custom_function( Cell* pCell, Phenotype& phenotype , double dt )
 void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& phenoOther , double dt )
 { return; }
 
+
+
+//letters not in the human amino acid alphabet: b,j,o,u,x,z
+static const double alphabet[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman amino acide alphabet
+static const double pad {0};
+
+// number of matching antigen antibody amino sequences that account for 100% affinity.
+static double aminoComplete = 10;
+
 void create_naive_bcell_type( void )  {
 
 	naive_bcell = find_cell_definition( "B_naive" );
 
         // antigen variable
-	//std::vector<double> antigenSequence = {0,1,0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
-	std::vector<double> antigenSequence = {};
+	//std::vector<double> antigenSequence = {pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad};
+        std::vector<double> antigenSequence {'c','a','d','d','c','e','n','k','l','l','c',pad,pad,pad,pad,pad};
 	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
         long antigenLength = antigenSequence.size();
         printf("number of antigenSequence ELEMENTS: %ld\n", antigenLength);
 
         // antibody variable
-	std::vector<double> antibodySequence = {'A','a','0','1',0,0.1,2}; 
+        std::vector<double> antibodySequence {'a','d','d','c','c','c','d','e','f','a','l','l','c','c','d','a'};
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
         long antibodyLength = antibodySequence.size();
         printf("number of antibodySequence ELEMENTS: %ld\n", antibodyLength);
@@ -234,33 +244,22 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
 	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
         printf("number of antigenSequence elements: %ld\n", antigenSequence.value.size());
-	//printf("antigenSequence: {%f, %f, %f}\n", antigenSequence.value[0], antigenSequence.value[1], antigenSequence.value[2]);
 
         // antibody sequence
 	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
 	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
         printf("number of antibodySequence elements: %ld\n", antibodySequence.value.size());
-	//printf("antibodySequence: {%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
 
-        // print sequences
-        printf("***antigenSequence: ");
-        for (double element : antigenSequence.value) {
-            printf("{%g}", element);
-        }
-        printf("***\n");
-
-        printf("***antibodySequence: ");
-        for (double element : antibodySequence.value) {
-            printf("{%g}", element);
-        }
-        printf("***\n"); 
+        // get alignment signal
+        double hammscore = alignment ( antigenSequence,  antibodySequence );
+        printf("alignment hamming score: %g\n", hammscore);
 
         // get pressure signal
         double pressure = get_single_signal( pCell , "pressure");
         // min pressure will be 0 [?]
         // max pressure - I have no idea. pragmatically set to 10. [?]
         double s0Pressure {0.0};
-        double s1Pressure {10.0};
+        double s1Pressure {10000.0};
         // get the response functions
         double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
         printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
@@ -276,8 +275,119 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         // 60[min] * rM[1/min] = 1
         double s1Apoptosis = 0.98 / 60;
 
-	// rule of pressure (future: and alignment score) to steer apoptosis rate
+        // bue 20130322: getting the complete formula adjusted will need some analysis. 
+	// rule of pressure and alignment score to steer apoptosis rate
+	//double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure + (1 - hammscore)) / 2;
 	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
         set_single_behavior( pCell, "apoptosis" , rApoptosis );
         printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
+}
+
+double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence ) {
+
+    // strip and print input
+    std::vector<double> antigen_sequence {};
+    std::vector<double> antibody_sequence {};
+
+    for (double element : antigenSequence.value) {
+        if (element != pad) {
+            antigen_sequence.push_back(element);
+        }
+    }
+    for (double element : antibodySequence.value) {
+        if (element != pad) {
+            antibody_sequence.push_back(element);
+        }
+    }
+
+    printf("***antigen_sequence: ");
+    for (double element : antigen_sequence) {
+        printf("{%g}", element);
+    }
+    printf("***.\n");
+    printf("***antibody_sequence: ");
+    for (double element : antibody_sequence) {
+        printf("{%g}", element);
+    }
+    printf("***.\n");
+
+
+    // find smaller slide sequence and pad the longer one
+    std::vector<double> padded_sequence {};
+    std::vector<double> slide_sequence {};
+
+    int i_antigen = antigen_sequence.size();
+    int i_antibody = antibody_sequence.size();
+
+    if (i_antigen <= i_antibody) {
+        slide_sequence = antigen_sequence;
+        for (double element : antigen_sequence) {
+            padded_sequence.push_back(pad);
+        }
+        for (double element : antibody_sequence) {
+            padded_sequence.push_back(element);
+        }
+        for (double element : antigen_sequence) {
+            padded_sequence.push_back(pad);
+        }
+    }
+    else {
+        slide_sequence = antigen_sequence;
+        for (double element : antibody_sequence) {
+            padded_sequence.push_back(pad);
+        }
+        for (double element : antigen_sequence) {
+            padded_sequence.push_back(element);
+        }
+        for (double element : antibody_sequence) {
+            padded_sequence.push_back(pad);
+        }
+    }
+
+    // print padded sequence
+    printf("***padded_sequence: ");
+    for (double element : padded_sequence) {
+        printf("{%d}", (int) element);
+    }
+    printf("***.\n");
+    printf("***side_sequence: ");
+    for (double element : slide_sequence) {
+        printf("{%d}", (int) element);
+    }
+    printf("***.\n");
+
+
+    // get hamming distance.
+    double i_hammdist_max = 0.0;
+    int i_slide = slide_sequence.size();
+    int i_template = padded_sequence.size() - i_slide;
+
+    for (size_t i=0; i <= i_template; i++) {
+        double i_hammdist = 0.0;
+        printf("***sequence intersection: ");
+        for (size_t j=i; j < (i + i_slide); j++) {
+            if (padded_sequence[j] == slide_sequence[j-i]) {
+                i_hammdist = i_hammdist + 1.0;
+            }
+            // print slide sequences
+            printf("{%d}", (int) padded_sequence[j]);
+        }
+        printf("*** hamming distance: %g.\n", i_hammdist);
+        if (i_hammdist_max < i_hammdist) {
+            i_hammdist_max = i_hammdist;
+        }
+    }
+
+    // calcualte hammingdistance score.
+    if (i_slide < aminoComplete) {
+        printf("Warning : aminoComplete {%d} is greater than the smaller squence {%d}, hamming score can never reach 1!\n", (int) aminoComplete, i_slide);
+    }
+
+    double r_hammscore =  i_hammdist_max / aminoComplete;
+    if (r_hammscore > 1) {
+        r_hammscore = 1;
+    }
+
+    // output
+    return(r_hammscore);
 }
