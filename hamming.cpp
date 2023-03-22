@@ -13,51 +13,82 @@ int main() {
     std::vector<double> paddedSequence {};
     std::vector<double> slideSequence {};
 
-    // find smaller sequence and pad
+    printf("***antigenSequence: ");
+    for (double element : antigenSequence) {                         
+        printf("{%g}", element);                                            
+    }                                                                       
+    printf("***.\n");
+
+    printf("***antibodySequence: ");
+    for (double element : antibodySequence) {                         
+        printf("{%g}", element);                                            
+    }                                                                       
+    printf("***.\n");
+
+    // find smaller slide sequence and pad the longer one
     if (i_antigen <= i_antibody) {
         slideSequence = antigenSequence;
         for (double element : antigenSequence) {
-            paddedSequence.push_back(NULL);
+            paddedSequence.push_back(0);
         }
         for (double element : antibodySequence) {
             paddedSequence.push_back(element);
         }
         for (double element : antigenSequence) {
-            paddedSequence.push_back(NULL);
+            paddedSequence.push_back(0);
         }
     }
     else {
-        slideSequence = antibodySequence;
+        slideSequence = antigenSequence;
         for (double element : antibodySequence) {
-            paddedSequence.push_back(NULL);
+            paddedSequence.push_back(0);
         }
         for (double element : antigenSequence) {
             paddedSequence.push_back(element);
         }
         for (double element : antibodySequence) {
-            paddedSequence.push_back(NULL);
+            paddedSequence.push_back(0);
         }
     }
 
+    // print padded sequence
+    printf("***paddedSequence: ");
+    for (double element : paddedSequence) {                         
+        printf("{%d}", (int) element);                                            
+    }                                                                       
+    printf("***.\n");
+    printf("***sideSequence: ");
+    for (double element : slideSequence) {                         
+        printf("{%d}", (int) element);                                            
+    }                                                                       
+    printf("***.\n\n");
+
+
     // get hamming distance.
-    double i_hamm_max = 0;
+    double i_hammdist_max = 0.0;
     int i_slide = slideSequence.size();
-    for (size_t i=i_slide; i < paddedSequence.size(); i++) {
-        double i_hamm = 0;
-        for (size_t j=i; j < i + i_slide; j++) {
-            if (paddedSequence[i+j] == slideSequence[j]) {
-                i_hamm = i_hamm + 1;
+    int i_template = paddedSequence.size() - i_slide;
+
+    for (size_t i=0; i <= i_template; i++) {
+        double i_hammdist = 0.0;
+        printf("***sequence intersection: ");
+        for (size_t j=i; j < (i + i_slide); j++) {
+            if (paddedSequence[j] == slideSequence[j-i]) {
+                i_hammdist = i_hammdist + 1.0;
             }
+            // print slide sequences
+            printf("{%d}", (int) paddedSequence[j]);
         }
-        if (i_hamm_max < i_hamm) {
-            i_hamm_max = i_hamm;
+        printf("*** hamming distance: %g.\n\n", i_hammdist);
+        if (i_hammdist_max < i_hammdist) {
+            i_hammdist_max = i_hammdist;
         }
     }
 
     // calcualte hammingdistance score.
-    double r_hamm =  i_hamm_max / amminoComplete;
-    //if (r_hamm > 1);
-    //    r_hamm = 1;
-    //return(r_hamm);
-    printf("hamming score: %g = %g / %g\n", r_hamm, i_hamm_max, amminoComplete);
+    double r_hammscore =  i_hammdist_max / amminoComplete;
+    //if (r_hammscore > 1);
+    //    r_hammscore = 1;
+    //return(r_hammscore);
+    printf("final hamming score: %g = %g / %g\n", r_hammscore, i_hammdist_max, amminoComplete);
 }
