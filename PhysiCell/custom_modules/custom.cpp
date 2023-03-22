@@ -209,18 +209,21 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 { return; }
 
 
-double amminoComplete = 10;   // number of matching antigen antibody ammino sequences that account for 100% affinity.
 
 //letters not in the human ammino acid alphabet: b,j,o,u,x,z
-double alphabet[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman ammino acide alphabet
+static const double alphabet[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman ammino acide alphabet
+static const double pad {0};
+
+// number of matching antigen antibody ammino sequences that account for 100% affinity.
+static double amminoComplete = 10;
 
 void create_naive_bcell_type( void )  {
 
 	naive_bcell = find_cell_definition( "B_naive" );
 
         // antigen variable
-	//std::vector<double> antigenSequence = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-        std::vector<double> antigenSequence {'c','a','d','d','c','e','n','k','l','l','c',0,0,0,0,0};
+	//std::vector<double> antigenSequence = {pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad,pad};
+        std::vector<double> antigenSequence {'c','a','d','d','c','e','n','k','l','l','c',pad,pad,pad,pad,pad};
 	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
         long antigenLength = antigenSequence.size();
         printf("number of antigenSequence ELEMENTS: %ld\n", antigenLength);
@@ -272,8 +275,10 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         // 60[min] * rM[1/min] = 1
         double s1Apoptosis = 0.98 / 60;
 
+        // bue 20130322: getting the complete formula adjusted will need some analysis. 
 	// rule of pressure and alignment score to steer apoptosis rate
-	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure + (1 - hammscore)) / 2;
+	//double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure + (1 - hammscore)) / 2;
+	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
         set_single_behavior( pCell, "apoptosis" , rApoptosis );
         printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
 }
@@ -285,12 +290,12 @@ double alignement( Vector_Variable antigenSequence, Vector_Variable antibodySequ
     std::vector<double> antibody_sequence {};
 
     for (double element : antigenSequence.value) {
-        if (element != 0) {
+        if (element != pad) {
             antigen_sequence.push_back(element);
         }
     }
     for (double element : antibodySequence.value) {
-        if (element != 0) {
+        if (element != pad) {
             antibody_sequence.push_back(element);
         }
     }
@@ -317,25 +322,25 @@ double alignement( Vector_Variable antigenSequence, Vector_Variable antibodySequ
     if (i_antigen <= i_antibody) {
         slide_sequence = antigen_sequence;
         for (double element : antigen_sequence) {
-            padded_sequence.push_back(0);
+            padded_sequence.push_back(pad);
         }
         for (double element : antibody_sequence) {
             padded_sequence.push_back(element);
         }
         for (double element : antigen_sequence) {
-            padded_sequence.push_back(0);
+            padded_sequence.push_back(pad);
         }
     }
     else {
         slide_sequence = antigen_sequence;
         for (double element : antibody_sequence) {
-            padded_sequence.push_back(0);
+            padded_sequence.push_back(pad);
         }
         for (double element : antigen_sequence) {
             padded_sequence.push_back(element);
         }
         for (double element : antibody_sequence) {
-            padded_sequence.push_back(0);
+            padded_sequence.push_back(pad);
         }
     }
 
