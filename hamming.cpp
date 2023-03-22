@@ -1,8 +1,20 @@
+////////
+// tittle:
+//
+// language: C++
+// date: 2023-03-20
+// license: GPLv3
+// author: bue
+//
+// description:
+//   qunatify hamming distance from to protein sequences of variable size.
+////////
+
 #include <cstdio>
 #include <vector>
 
 //b,j,o,u,x,z
-double amminoComplete = 5;   // 100% affinity
+double amminoComplete = 10;   // 100% affinity
 double alphabet[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};
 std::vector<double> antigenSequence {'c','a','d','d','c','e'};
 std::vector<double> antibodySequence {'a','d','d','c','c','c','d','e','f','a'};
@@ -14,15 +26,15 @@ int main() {
     std::vector<double> slideSequence {};
 
     printf("***antigenSequence: ");
-    for (double element : antigenSequence) {                         
-        printf("{%g}", element);                                            
-    }                                                                       
+    for (double element : antigenSequence) {
+        printf("{%g}", element);
+    }
     printf("***.\n");
 
     printf("***antibodySequence: ");
-    for (double element : antibodySequence) {                         
-        printf("{%g}", element);                                            
-    }                                                                       
+    for (double element : antibodySequence) {
+        printf("{%g}", element);
+    }
     printf("***.\n");
 
     // find smaller slide sequence and pad the longer one
@@ -53,14 +65,14 @@ int main() {
 
     // print padded sequence
     printf("***paddedSequence: ");
-    for (double element : paddedSequence) {                         
-        printf("{%d}", (int) element);                                            
-    }                                                                       
+    for (double element : paddedSequence) {
+        printf("{%d}", (int) element);
+    }
     printf("***.\n");
     printf("***sideSequence: ");
-    for (double element : slideSequence) {                         
-        printf("{%d}", (int) element);                                            
-    }                                                                       
+    for (double element : slideSequence) {
+        printf("{%d}", (int) element);
+    }
     printf("***.\n\n");
 
 
@@ -86,9 +98,16 @@ int main() {
     }
 
     // calcualte hammingdistance score.
+    if (i_slide < amminoComplete) {
+        printf("Warning : amminoComplete {%d} is greater than the smaller squence {%d}, hamming score can never reach 1!\n", (int) amminoComplete, i_slide);
+    }
+
     double r_hammscore =  i_hammdist_max / amminoComplete;
-    //if (r_hammscore > 1);
-    //    r_hammscore = 1;
-    //return(r_hammscore);
+    if (r_hammscore > 1) {
+        r_hammscore = 1;
+    }
+
+    // output
+    // return(r_hammscore);
     printf("final hamming score: %g = %g / %g\n", r_hammscore, i_hammdist_max, amminoComplete);
 }
