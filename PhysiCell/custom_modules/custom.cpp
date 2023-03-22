@@ -210,12 +210,12 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 
 
 
-//letters not in the human ammino acid alphabet: b,j,o,u,x,z
-static const double alphabet[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman ammino acide alphabet
+//letters not in the human amino acid alphabet: b,j,o,u,x,z
+static const double alphabet[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman amino acide alphabet
 static const double pad {0};
 
-// number of matching antigen antibody ammino sequences that account for 100% affinity.
-static double amminoComplete = 10;
+// number of matching antigen antibody amino sequences that account for 100% affinity.
+static double aminoComplete = 10;
 
 void create_naive_bcell_type( void )  {
 
@@ -251,8 +251,8 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         printf("number of antibodySequence elements: %ld\n", antibodySequence.value.size());
 
         // get alignment signal
-        double hammscore = alignement ( antigenSequence,  antibodySequence );
-        printf("alignement hamming score: %g\n", hammscore);
+        double hammscore = alignment ( antigenSequence,  antibodySequence );
+        printf("alignment hamming score: %g\n", hammscore);
 
         // get pressure signal
         double pressure = get_single_signal( pCell , "pressure");
@@ -283,7 +283,7 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
 }
 
-double alignement( Vector_Variable antigenSequence, Vector_Variable antibodySequence ) {
+double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence ) {
 
     // strip and print input
     std::vector<double> antigen_sequence {};
@@ -379,11 +379,11 @@ double alignement( Vector_Variable antigenSequence, Vector_Variable antibodySequ
     }
 
     // calcualte hammingdistance score.
-    if (i_slide < amminoComplete) {
-        printf("Warning : amminoComplete {%d} is greater than the smaller squence {%d}, hamming score can never reach 1!\n", (int) amminoComplete, i_slide);
+    if (i_slide < aminoComplete) {
+        printf("Warning : aminoComplete {%d} is greater than the smaller squence {%d}, hamming score can never reach 1!\n", (int) aminoComplete, i_slide);
     }
 
-    double r_hammscore =  i_hammdist_max / amminoComplete;
+    double r_hammscore =  i_hammdist_max / aminoComplete;
     if (r_hammscore > 1) {
         r_hammscore = 1;
     }
