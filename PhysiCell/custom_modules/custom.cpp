@@ -275,9 +275,24 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         // let's say, at max pressure 98% of the cells should enter apoptosis within 60 [1/min]
         // 60[min] * rM[1/min] = 1
         double s1Apoptosis = 0.98 / 60;
-
 	// rule of pressure (future: and alignment score) to steer apoptosis rate
 	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
         set_single_behavior( pCell, "apoptosis" , rApoptosis );
         printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
+
+	///Jays code:
+	///we need to tranform when the "correct" sequence is recieved
+	///first lets always transform!
+	//boo
+	long antibodyLen = antibodySequence.value.size();
+	long antigenLen = antigenSequence.value.size();
+	double anti;
+	bool transform == TRUE;
+	if( (transform) ){
+		set_single_behavior(pCell, "transform to B_follicuar", 9e9);
+	}
+	else {
+		set_single_behavior(pCell, "transform to B_memory", 9e9);
+	}
+
 }
