@@ -92,4 +92,3 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 
 void create_naive_bcell_type( void );
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
-double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence );

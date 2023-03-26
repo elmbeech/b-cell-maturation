@@ -58,7 +58,7 @@ PhysiCell_pugixml.o PhysiCell_settings.o PhysiCell_geometry.o
 
 # put your custom objects here (they should be in the custom_modules directory)
 
-PhysiCell_custom_module_OBJECTS := custom.o
+PhysiCell_custom_module_OBJECTS := custom.o hamming.o
 
 pugixml_OBJECTS := pugixml.o
 
@@ -167,6 +167,9 @@ PhysiCell_geometry.o: ./modules/PhysiCell_geometry.cpp
 
 custom.o: ./custom_modules/custom.cpp 
 	$(COMPILE_COMMAND) -c ./custom_modules/custom.cpp
+
+hamming.o: ./custom_modules/hamming.cpp 
+	$(COMPILE_COMMAND) -c ./custom_modules/hamming.cpp
 
 # cleanup
 
