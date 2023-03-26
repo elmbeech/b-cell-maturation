@@ -47,7 +47,7 @@
     </options>
 
     <microenvironment_setup>
-        <variable name="substrate" units="dimensionless" ID="0">
+        <variable name="Quorum_factor" units="dimensionless" ID="0">
             <physical_parameter_set>
                 <diffusion_coefficient units="micron^2/min">100000.0</diffusion_coefficient>
                 <decay_rate units="1/min">10</decay_rate>
@@ -157,20 +157,20 @@
                         <use_2D>true</use_2D>
                         <chemotaxis>
                             <enabled>false</enabled>
-                            <substrate>substrate</substrate>
+                            <substrate>Quorum_factor</substrate>
                             <direction>1</direction>
                         </chemotaxis>
                         <advanced_chemotaxis>
                             <enabled>false</enabled>
                             <normalize_each_gradient>false</normalize_each_gradient>
                             <chemotactic_sensitivities>
-                                <chemotactic_sensitivity substrate="substrate">0.0</chemotactic_sensitivity>
+                                <chemotactic_sensitivity substrate="Quorum_factor">0.0</chemotactic_sensitivity>
                             </chemotactic_sensitivities>
                         </advanced_chemotaxis>
                     </options>
                 </motility>
                 <secretion>
-                    <substrate name="substrate">
+                    <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
                         <secretion_target units="substrate density">1.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
@@ -222,6 +222,7 @@
             </phenotype>
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
+                <hasAntigen conserved="true" units="bool" description="">1.0</hasAntigen>
             </custom_data>
         </cell_definition>
         <cell_definition name="B_naive" ID="1">
@@ -305,24 +306,24 @@
                         <use_2D>true</use_2D>
                         <chemotaxis>
                             <enabled>false</enabled>
-                            <substrate>substrate</substrate>
+                            <substrate>Quorum_factor</substrate>
                             <direction>1</direction>
                         </chemotaxis>
                         <advanced_chemotaxis>
                             <enabled>false</enabled>
                             <normalize_each_gradient>false</normalize_each_gradient>
                             <chemotactic_sensitivities>
-                                <chemotactic_sensitivity substrate="substrate">0.0</chemotactic_sensitivity>
+                                <chemotactic_sensitivity substrate="Quorum_factor">0.0</chemotactic_sensitivity>
                             </chemotactic_sensitivities>
                         </advanced_chemotaxis>
                     </options>
                 </motility>
                 <secretion>
-                    <substrate name="substrate">
-                        <secretion_rate units="1/min">0.0</secretion_rate>
+                    <substrate name="Quorum_factor">
+                        <secretion_rate units="1/min">0.1</secretion_rate>
                         <secretion_target units="substrate density">1.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
-                        <net_export_rate units="total substrate/min">0.0</net_export_rate>
+                        <net_export_rate units="total substrate/min">1.0</net_export_rate>
                     </substrate>
                 </secretion>
                 <cell_interactions>
@@ -370,6 +371,7 @@
             </phenotype>
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
+                <hasAntigen conserved="true" units="bool" description="">0.0</hasAntigen>
             </custom_data>
         </cell_definition>
         <cell_definition name="Tf_helper" ID="2">
@@ -448,28 +450,28 @@
                     <detachment_rate units="1/min">0.0</detachment_rate>
                 </mechanics>
                 <motility>
-                    <speed units="micron/min">1</speed>
+                    <speed units="micron/min">10</speed>
                     <persistence_time units="min">1</persistence_time>
                     <migration_bias units="dimensionless">.5</migration_bias>
                     <options>
-                        <enabled>false</enabled>
+                        <enabled>true</enabled>
                         <use_2D>true</use_2D>
                         <chemotaxis>
                             <enabled>false</enabled>
-                            <substrate>substrate</substrate>
+                            <substrate>Quorum_factor</substrate>
                             <direction>1</direction>
                         </chemotaxis>
                         <advanced_chemotaxis>
                             <enabled>false</enabled>
                             <normalize_each_gradient>false</normalize_each_gradient>
                             <chemotactic_sensitivities>
-                                <chemotactic_sensitivity substrate="substrate">0.0</chemotactic_sensitivity>
+                                <chemotactic_sensitivity substrate="Quorum_factor">0.0</chemotactic_sensitivity>
                             </chemotactic_sensitivities>
                         </advanced_chemotaxis>
                     </options>
                 </motility>
                 <secretion>
-                    <substrate name="substrate">
+                    <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0</secretion_rate>
                         <secretion_target units="substrate density">1</secretion_target>
                         <uptake_rate units="1/min">0</uptake_rate>
@@ -521,6 +523,7 @@
             </phenotype>
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">1.0</sample>
+                <hasAntigen conserved="false" units="bool" description="">1.0</hasAntigen>
             </custom_data>
         </cell_definition>
         <cell_definition name="B_memory" ID="3">
@@ -604,20 +607,20 @@
                         <use_2D>true</use_2D>
                         <chemotaxis>
                             <enabled>false</enabled>
-                            <substrate>substrate</substrate>
+                            <substrate>Quorum_factor</substrate>
                             <direction>1</direction>
                         </chemotaxis>
                         <advanced_chemotaxis>
                             <enabled>false</enabled>
                             <normalize_each_gradient>false</normalize_each_gradient>
                             <chemotactic_sensitivities>
-                                <chemotactic_sensitivity substrate="substrate">0.0</chemotactic_sensitivity>
+                                <chemotactic_sensitivity substrate="Quorum_factor">0.0</chemotactic_sensitivity>
                             </chemotactic_sensitivities>
                         </advanced_chemotaxis>
                     </options>
                 </motility>
                 <secretion>
-                    <substrate name="substrate">
+                    <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
                         <secretion_target units="substrate density">1.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
@@ -669,6 +672,7 @@
             </phenotype>
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
+                <hasAntigen conserved="true" units="bool" description="">1.0</hasAntigen>
             </custom_data>
         </cell_definition>
         <cell_definition name="B_plasma" ID="4">
@@ -752,20 +756,20 @@
                         <use_2D>true</use_2D>
                         <chemotaxis>
                             <enabled>false</enabled>
-                            <substrate>substrate</substrate>
+                            <substrate>Quorum_factor</substrate>
                             <direction>1</direction>
                         </chemotaxis>
                         <advanced_chemotaxis>
                             <enabled>false</enabled>
                             <normalize_each_gradient>false</normalize_each_gradient>
                             <chemotactic_sensitivities>
-                                <chemotactic_sensitivity substrate="substrate">0.0</chemotactic_sensitivity>
+                                <chemotactic_sensitivity substrate="Quorum_factor">0.0</chemotactic_sensitivity>
                             </chemotactic_sensitivities>
                         </advanced_chemotaxis>
                     </options>
                 </motility>
                 <secretion>
-                    <substrate name="substrate">
+                    <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
                         <secretion_target units="substrate density">1.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
@@ -817,6 +821,7 @@
             </phenotype>
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
+                <hasAntigen conserved="true" units="bool" description="">1.0</hasAntigen>
             </custom_data>
         </cell_definition>
         <cell_definition name="Antibody" ID="5">
@@ -900,20 +905,20 @@
                         <use_2D>true</use_2D>
                         <chemotaxis>
                             <enabled>false</enabled>
-                            <substrate>substrate</substrate>
+                            <substrate>Quorum_factor</substrate>
                             <direction>1</direction>
                         </chemotaxis>
                         <advanced_chemotaxis>
                             <enabled>false</enabled>
                             <normalize_each_gradient>false</normalize_each_gradient>
                             <chemotactic_sensitivities>
-                                <chemotactic_sensitivity substrate="substrate">0.0</chemotactic_sensitivity>
+                                <chemotactic_sensitivity substrate="Quorum_factor">0.0</chemotactic_sensitivity>
                             </chemotactic_sensitivities>
                         </advanced_chemotaxis>
                     </options>
                 </motility>
                 <secretion>
-                    <substrate name="substrate">
+                    <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
                         <secretion_target units="substrate density">1.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
@@ -965,6 +970,7 @@
             </phenotype>
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
+                <hasAntigen conserved="false" units="bool" description="">0.0</hasAntigen>
             </custom_data>
         </cell_definition>
         <cell_definition name="Invader" ID="6">
@@ -1048,20 +1054,20 @@
                         <use_2D>true</use_2D>
                         <chemotaxis>
                             <enabled>false</enabled>
-                            <substrate>substrate</substrate>
+                            <substrate>Quorum_factor</substrate>
                             <direction>1</direction>
                         </chemotaxis>
                         <advanced_chemotaxis>
                             <enabled>false</enabled>
                             <normalize_each_gradient>false</normalize_each_gradient>
                             <chemotactic_sensitivities>
-                                <chemotactic_sensitivity substrate="substrate">0.0</chemotactic_sensitivity>
+                                <chemotactic_sensitivity substrate="Quorum_factor">0.0</chemotactic_sensitivity>
                             </chemotactic_sensitivities>
                         </advanced_chemotaxis>
                     </options>
                 </motility>
                 <secretion>
-                    <substrate name="substrate">
+                    <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
                         <secretion_target units="substrate density">1.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
@@ -1113,6 +1119,7 @@
             </phenotype>
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
+                <hasAntigen conserved="false" units="bool" description="">0.0</hasAntigen>
             </custom_data>
         </cell_definition>
     </cell_definitions>

@@ -72,6 +72,18 @@
 Cell_Definition* naive_bcell; 
 Cell_Definition* tfhelper_cell; 
 
+const int B_NAIVE_ID = 1; //from config XML
+const std::vector<double> EMPTY_ANTIGEN = {0, 0, 0, 0, 0, 0};
+const int ANTIGEN_LEN = EMPTY_ANTIGEN.size();
+
+
+std::vector<double> get_vector_variable(Cell* pCell, std::string name) {
+	int index = pCell->custom_data.find_vector_variable_index(name);
+	if (index < 0 || index >= pCell->custom_data.vector_variables.size())
+		throw std::invalid_argument("The cell has no vector with name `"+ name +"`");
+	return pCell->custom_data.vector_variables[index].value;
+}
+
 void create_cell_types( void )
 {
 	// set the random seed
@@ -216,65 +228,28 @@ void create_naive_bcell_type( void )  {
 
 	naive_bcell = find_cell_definition( "B_naive" );
 
-        // antigen variable
-	//std::vector<double> antigenSequence = {0,1,0}; //TODO: Should be empty by default. We need T FH cells to give the antigens.
-	std::vector<double> antigenSequence = {};
+	// antigen variable
+	std::vector<double> antigenSequence = EMPTY_ANTIGEN;
 	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
-        long antigenLength = antigenSequence.size();
-        printf("number of antigenSequence ELEMENTS: %ld\n", antigenLength);
 
-        // antibody variable
-	std::vector<double> antibodySequence = {'A','a','0','1',0,0.1,2}; 
+	// antibody variable
+	std::vector<double> antibodySequence = {1, 0, 0,}; 
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
-        long antibodyLength = antibodySequence.size();
-        printf("number of antibodySequence ELEMENTS: %ld\n", antibodyLength);
 
-        // update phenotype
+	// update phenotype
 	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
 }
 
 void create_naive_tfhelper_cell_type( void )  {
 	tfhelper_cell = find_cell_definition( "Tf_helper" );
 
-	int ANTIGEN_LEN = 3;
-
-	std::vector<double> foreignAntigen = {0, 1, 0}; 
-	for (int i = 0; i < ANTIGEN_LEN; i++) {
-		foreignAntigen[i] = rand() % 2; //set as rand number 0 or 1
-		i++;
-	}
-
-	tfhelper_cell->custom_data.add_vector_variable( "foreignAntigen", foreignAntigen );
+	std::vector<double> antigenSequence = {'C', 'B', 'A', 'B', 'C', 'D'};	
+	tfhelper_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
 
 	tfhelper_cell->functions.update_phenotype = tfhelper_cell_phenotype; 
 }
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
-
-	// antigen sequence
-	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
-	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
-	printf("number of antigenSequence elements: %ld\n", antigenSequence.value.size());
-	//printf("antigenSequence: {%f, %f, %f}\n", antigenSequence.value[0], antigenSequence.value[1], antigenSequence.value[2]);
-
-	// antibody sequence
-	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
-	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
-	printf("number of antibodySequence elements: %ld\n", antibodySequence.value.size());
-	//printf("antibodySequence: {%f, %f, %f}\n", antibodySequence.value[0], antibodySequence.value[1], antibodySequence.value[2]);
-
-	// print sequences
-	printf("***antigenSequence: ");
-	for (double element : antigenSequence.value) {
-		printf("{%g}", element);
-	}
-	printf("***\n");
-
-	printf("***antibodySequence: ");
-	for (double element : antibodySequence.value) {
-		printf("{%g}", element);
-	}
-	printf("***\n"); 
 
 	// get pressure signal
 	double pressure = get_single_signal( pCell , "pressure");
@@ -284,7 +259,7 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	double s1Pressure {10.0};
 	// get the response functions
 	double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
-	printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
+	// printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
 
 	// apoptosis response
 	// get min rate value for apoptosis
@@ -300,48 +275,63 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	// rule of pressure (future: and alignment score) to steer apoptosis rate
 	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
 	set_single_behavior( pCell, "apoptosis" , rApoptosis );
-	printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
-}
+	// printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
 
-
-void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
-
-	// antigen sequence
+	//TODO: Mutate antibody if antigen is present
 	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
 	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
-	printf("number of antigenSequence elements: %ld\n", antigenSequence.value.size());
-	//printf("antigenSequence: {%f, %f, %f}\n", antigenSequence.value[0], antigenSequence.value[1], antigenSequence.value[2]);
 
-	// print sequences
+	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
+	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
+
+	if (antigenSequence.value == EMPTY_ANTIGEN)
+		return;
+	
 	printf("***antigenSequence: ");
 	for (double element : antigenSequence.value) {
 		printf("{%g}", element);
 	}
 	printf("***\n");
 
-	// get pressure signal
-	double pressure = get_single_signal( pCell , "pressure");
-	// min pressure will be 0 [?]
-	// max pressure - I have no idea. pragmatically set to 10. [?]
-	double s0Pressure {0.0};
-	double s1Pressure {10.0};
-	// get the response functions
-	double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
-	printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
+	// printf("***antibodySequence: ");
+	// for (double element : antibodySequence.value) {
+	// 	printf("{%g}", element);
+	// }
+	// printf("***\n"); 
+}
 
-	// apoptosis response
-	// get min rate value for apoptosis
-	// the default rate is 5.31667e-05
-	// this means the probability to die in a 6 min time step is 6[min] * 5.31667e-05[1/min] = 0.0003190002
-	// this means the probability to die in a 60 min time setp is 6[min] * 5.31667e-05[1/min] = 0.003190002 (~ 3 per mille)
-	double s0Apoptosis = get_single_base_behavior( pCell, "apoptosis" );
-	// get max rate value for apoptosis
-	// let's say, at max pressure 98% of the cells should enter apoptosis within 60 [1/min]
-	// 60[min] * rM[1/min] = 1
-	double s1Apoptosis = 0.98 / 60;
 
-	// rule of pressure (future: and alignment score) to steer apoptosis rate
-	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
-	set_single_behavior( pCell, "apoptosis" , rApoptosis );
-	printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
+void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
+	std::vector<double> foreignAntigen = get_vector_variable(pCell, "antigenSequence");
+	
+	int numTouching = pCell->state.neighbors.size();
+	for (int i = 0; i < numTouching; i++) {
+		Cell* neighbor = pCell->state.neighbors[i];
+		if (neighbor->type == B_NAIVE_ID) {
+			pCell->is_movable = false;
+			pCell->attach_cell(neighbor);
+			pCell->functions.update_phenotype = NULL;
+			
+			//Transfer antigen to B cell
+			int antigenIndex = neighbor->custom_data.find_vector_variable_index("antigenSequence");
+			neighbor->custom_data.vector_variables[antigenIndex].value = foreignAntigen;
+			
+			// set_single_behavior(neighbor, "transform to B_follicular", 1e9); //FIXME
+
+			return;
+		}
+	}
+	
+	// increase migration bias in higher quorum factor
+	double q = get_single_signal( pCell, "Quorum_factor");
+	double b0 = get_single_base_behavior( pCell, "migration bias");
+	double bM = 1;
+	double b = b0 + (bM-b0)*linear_response_function( q , 0 , 1 );
+	set_single_behavior( pCell , "migration bias" , b );
+
+	// reduce migration speed in higher quorum factor
+	// double s0 = get_single_base_behavior( pCell, "migration speed");
+	// double sM = 0.1*s0;
+	// double s = s0 + (sM-s0)*decreasing_linear_response_function( q , 0.5, 0.75 );
+	// set_single_behavior( pCell , "migration speed" , s ); 
 }
