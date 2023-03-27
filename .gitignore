@@ -5,6 +5,7 @@
 # physicell
 *.o
 *.exe
+ALL_CITATIONS.txt
 main-backup.cpp
 Makefile-backup
 output/
