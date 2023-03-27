@@ -210,61 +210,6 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 { return; }
 
 
-
-
-
-//temporary (equal) probabilities to choose from alphabet with choose_event
-size_t alphabetLength = sizeof(alphabet) / sizeof(alphabet[0]);
-std::vector<double> probabilities(alphabetLength, 1.0 / alphabetLength);
-
-// Generate antibody/antigen sequence given actual length of code, and length of padding
-std::vector<double> generateSequence( int sequenceLength, int padLength ) {
-    std::vector<double> sequence;
-    for (size_t i = 0; i < sequenceLength; ++i) {
-        sequence.push_back(alphabet[choose_event(probabilities)]);
-    }
-    for (size_t i = 0; i < padLength; ++i) {
-        sequence.push_back(pad);
-    }
-    return sequence;
-}
-
-// Mutate antibody/antigen sequence given sequence and number of mutations (doesn't affect padding)
-// This function can mutate the same letter twice, which can be fixed by changing mutateProbabilities after each mutation
-// May change if necessary
-void mutateSequence( std::vector<double>& sequence, int mutations ) {
-    // Find length of actual sequence without padding
-    size_t sequenceLength = 0;
-    for (const auto& value : sequence) {
-        if (value != pad) {
-            ++sequenceLength;
-        } else {
-            break;
-        }
-    }
-
-    // Create equal probability vector to choose from the sequence
-    std::vector<double> mutateProbabilities(sequenceLength, 1.0 / sequenceLength);
-
-    // Mutate the sequence
-    for (size_t i = 0; i < mutations; ++i) {
-        sequence[choose_event(mutateProbabilities)] = alphabet[choose_event(probabilities)];
-    }
-}
-
-// Print antibody/antigen sequence
-void printSequence( std::vector<double>& sequence ) {
-    printf("sequence: ");
-    for (const auto& value : sequence) {
-        if ((int)value==0) {
-            printf(" %d", (int)value);
-        } else {
-            printf(" %c", (int)value);
-        }
-    }
-    printf("\n");
-}
-
 void create_naive_bcell_type( void )  {
 
 	naive_bcell = find_cell_definition( "B_naive" );
@@ -276,7 +221,7 @@ void create_naive_bcell_type( void )  {
         printf("number of antigenSequence ELEMENTS: %ld\n", antigenLength);
 
         // antibody variable
-        std::vector<double> antibodySequence {'a','d','d','c','c','c','d','e','f','a','l','l','c','c','d','a'};
+	std::vector<double> antibodySequence = {'A','a','0','1','0',0.1,2,'a','b','c'}; 
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
         long antibodyLength = antibodySequence.size();
         printf("number of antibodySequence ELEMENTS: %ld\n", antibodyLength);
@@ -284,6 +229,7 @@ void create_naive_bcell_type( void )  {
         // update phenotype
 	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
 }
+
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 
@@ -326,6 +272,27 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	// rule of pressure and alignment score to steer apoptosis rate
 	//double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure + (1 - hammscore)) / 2;
 	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
-        set_single_behavior( pCell, "apoptosis" , rApoptosis );
+        //set_single_behavior( pCell, "apoptosis" , rApoptosis );
         printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
+
+	///Jays code:
+	///we need to tranform when the "correct" sequence is recieved
+	///first lets always transform!
+	//boo
+	// double isTransform = alignment(antibodySequence, antigenSequence);
+	// printf("score: %g", isTransform);
+	// long antibodyLen = antibodySequence.value.size();
+	// long antigenLen = antigenSequence.value.size();
+	// double anti;
+	//
+	// if(isTransform >= .7) {
+	// 	set_single_behavior(pCell, "transform to B_follicular", 9e9);
+	// }
+	// else if(isTransform >= .90){
+	// 	set_single_behavior(pCell, "transform to B_plasma", 9e9);
+	// }
+	// else{
+	// 	printf("There was no change, stay naive\n");
+	// }
 }
+
