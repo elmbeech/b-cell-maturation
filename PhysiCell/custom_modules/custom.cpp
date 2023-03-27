@@ -64,12 +64,28 @@
 #                                                                             #
 ###############################################################################
 */
+#include <stdlib.h>
+#include <time.h>
 #include <typeinfo>
 #include <vector>
+
 #include "./custom.h"
 #include "./hamming.h"
 
-Cell_Definition* naive_bcell;
+Cell_Definition* naive_bcell; 
+Cell_Definition* tfhelper_cell; 
+
+const int B_NAIVE_ID = 1; //from config XML
+const std::vector<double> EMPTY_ANTIGEN = {0, 0, 0, 0, 0, 0};
+const int ANTIGEN_LEN = EMPTY_ANTIGEN.size();
+
+
+std::vector<double> get_vector_variable(Cell* pCell, std::string name) {
+	int index = pCell->custom_data.find_vector_variable_index(name);
+	if (index < 0 || index >= pCell->custom_data.vector_variables.size())
+		throw std::invalid_argument("The cell has no vector with name `"+ name +"`");
+	return pCell->custom_data.vector_variables[index].value;
+}
 
 void create_cell_types( void )
 {
@@ -126,6 +142,7 @@ void create_cell_types( void )
 	cell_defaults.functions.contact_function = contact_function;
 
         create_naive_bcell_type();
+	create_naive_tfhelper_cell_type();
 	
 	/*
 	   This builds the map of cell definitions and summarizes the setup.
@@ -138,16 +155,17 @@ void create_cell_types( void )
 
 void setup_microenvironment( void )
 {
-	// set domain parameters
-
-	// put any custom code to set non-homogeneous initial conditions or
+	// set domain parameters 
+	
+	// put any custom code to set non-homogeneous initial conditions or 
 	// extra Dirichlet nodes here.
-
-	// initialize BioFVM
-
-	initialize_microenvironment();
-
-	return;
+  	srand(time(NULL));
+	
+	// initialize BioFVM 
+	
+	initialize_microenvironment(); 	
+	
+	return; 
 }
 
 void setup_tissue( void )
@@ -210,26 +228,70 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 { return; }
 
 
+// follicular T helper cell
+void create_naive_tfhelper_cell_type( void )  {
+	tfhelper_cell = find_cell_definition( "Tf_helper" );
+
+	std::vector<double> antigenSequence = {'C', 'B', 'A', 'B', 'C', 'D'};	
+	tfhelper_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+
+	tfhelper_cell->functions.update_phenotype = tfhelper_cell_phenotype; 
+}
+
+void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
+	std::vector<double> foreignAntigen = get_vector_variable(pCell, "antigenSequence");
+	
+	int numTouching = pCell->state.neighbors.size();
+	for (int i = 0; i < numTouching; i++) {
+		Cell* neighbor = pCell->state.neighbors[i];
+		if (neighbor->type == B_NAIVE_ID) {
+			pCell->is_movable = false;
+			pCell->attach_cell(neighbor);
+			pCell->functions.update_phenotype = NULL;
+			
+			//Transfer antigen to B cell
+			int antigenIndex = neighbor->custom_data.find_vector_variable_index("antigenSequence");
+			neighbor->custom_data.vector_variables[antigenIndex].value = foreignAntigen;
+			
+			// set_single_behavior(neighbor, "transform to B_follicular", 1e9); //FIXME
+
+			return;
+		}
+	}
+	
+	// increase migration bias in higher quorum factor
+	double q = get_single_signal( pCell, "Quorum_factor");
+	double b0 = get_single_base_behavior( pCell, "migration bias");
+	double bM = 1;
+	double b = b0 + (bM-b0)*linear_response_function( q , 0 , 1 );
+	set_single_behavior( pCell , "migration bias" , b );
+
+	// reduce migration speed in higher quorum factor
+	// double s0 = get_single_base_behavior( pCell, "migration speed");
+	// double sM = 0.1*s0;
+	// double s = s0 + (sM-s0)*decreasing_linear_response_function( q , 0.5, 0.75 );
+	// set_single_behavior( pCell , "migration speed" , s ); 
+}
+
+
+// naive B cell
 void create_naive_bcell_type( void )  {
 
 	naive_bcell = find_cell_definition( "B_naive" );
 
         // antigen variable
         std::vector<double> antigenSequence {'c','a','d','d','c','e','n','k','l','l','c',PAD,PAD,PAD,PAD,PAD};
+	//std::vector<double> antigenSequence = EMPTY_ANTIGEN;
 	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
-        long antigenLength = antigenSequence.size();
-        printf("number of antigenSequence ELEMENTS: %ld\n", antigenLength);
 
         // antibody variable
 	std::vector<double> antibodySequence = {'A','a','0','1','0',0.1,2,'a','b','c'}; 
+	//std::vector<double> antibodySequence = {1, 0, 0,}; 
 	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
-        long antibodyLength = antibodySequence.size();
-        printf("number of antibodySequence ELEMENTS: %ld\n", antibodyLength);
 
-        // update phenotype
+	// update phenotype
 	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
 }
-
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 
@@ -243,6 +305,23 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
         printf("number of antibodySequence elements: %ld\n", antibodySequence.value.size());
 
+	//TODO: Mutate antibody if antigen is present
+	if (antigenSequence.value == EMPTY_ANTIGEN)
+		return;
+	
+	//printf("***antigenSequence: ");
+	//for (double element : antigenSequence.value) {
+	//	printf("{%g}", element);
+	//}
+	//printf("***\n");
+
+	// printf("***antibodySequence: ");
+	// for (double element : antibodySequence.value) {
+	// 	printf("{%g}", element);
+	// }
+	// printf("***\n"); 
+
+
         // get alignment signal
         double hammscore = alignment ( antigenSequence,  antibodySequence );
         printf("alignment hamming score: %g\n", hammscore);
@@ -252,7 +331,7 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         // min pressure will be 0 [?]
         // max pressure - I have no idea. pragmatically set to 10. [?]
         double s0Pressure {0.0};
-        double s1Pressure {10000.0};
+        double s1Pressure {10.0};
         // get the response functions
         double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
         printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
@@ -272,7 +351,8 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	// rule of pressure and alignment score to steer apoptosis rate
 	//double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure + (1 - hammscore)) / 2;
 	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
-        //set_single_behavior( pCell, "apoptosis" , rApoptosis );
+
+        set_single_behavior( pCell, "apoptosis" , rApoptosis );
         printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
 
 	///Jays code:
