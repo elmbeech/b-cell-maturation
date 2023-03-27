@@ -77,7 +77,6 @@ Cell_Definition* tfhelper_cell;
 
 const int B_NAIVE_ID = 1; //from config XML
 const std::vector<double> EMPTY_ANTIGEN = {0, 0, 0, 0, 0, 0};
-const int ANTIGEN_LEN = EMPTY_ANTIGEN.size();
 
 
 std::vector<double> get_vector_variable(Cell* pCell, std::string name) {
