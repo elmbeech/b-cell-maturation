@@ -213,6 +213,58 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 
 
 
+//temporary (equal) probabilities to choose from alphabet with choose_event
+size_t alphabetLength = sizeof(alphabet) / sizeof(alphabet[0]);
+std::vector<double> probabilities(alphabetLength, 1.0 / alphabetLength);
+
+// Generate antibody/antigen sequence given actual length of code, and length of padding
+std::vector<double> generateSequence( int sequenceLength, int padLength ) {
+    std::vector<double> sequence;
+    for (size_t i = 0; i < sequenceLength; ++i) {
+        sequence.push_back(alphabet[choose_event(probabilities)]);
+    }
+    for (size_t i = 0; i < padLength; ++i) {
+        sequence.push_back(pad);
+    }
+    return sequence;
+}
+
+// Mutate antibody/antigen sequence given sequence and number of mutations (doesn't affect padding)
+// This function can mutate the same letter twice, which can be fixed by changing mutateProbabilities after each mutation
+// May change if necessary
+void mutateSequence( std::vector<double>& sequence, int mutations ) {
+    // Find length of actual sequence without padding
+    size_t sequenceLength = 0;
+    for (const auto& value : sequence) {
+        if (value != pad) {
+            ++sequenceLength;
+        } else {
+            break;
+        }
+    }
+
+    // Create equal probability vector to choose from the sequence
+    std::vector<double> mutateProbabilities(sequenceLength, 1.0 / sequenceLength);
+
+    // Mutate the sequence
+    for (size_t i = 0; i < mutations; ++i) {
+        sequence[choose_event(mutateProbabilities)] = alphabet[choose_event(probabilities)];
+    }
+}
+
+// Print antibody/antigen sequence
+void printSequence( std::vector<double>& sequence ) {
+    printf("sequence: ");
+    for (const auto& value : sequence) {
+        if ((int)value==0) {
+            printf(" %d", (int)value);
+        } else {
+            printf(" %c", (int)value);
+        }
+    }
+    printf("\n");
+}
+
 void create_naive_bcell_type( void )  {
 
 	naive_bcell = find_cell_definition( "B_naive" );
