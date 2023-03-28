@@ -97,12 +97,16 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
 void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
 
 // custom constantes
+static const std::string B_NAIVE_NAME {"B_naive"}; //from config XML
+
 //letters not in the human amino acid alphabet: b,j,o,u,x,z
 //static const double ALPHABET[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman amino acide alphabet
 static const double ALPHABET[] {'a','t','c','g'};  // oligo nucleotide alphabet
 static const double PAD {0};
-static const double AMINOCOMPLETE = 10;  // number of matching antigen antibody amino sequences that account for 100% affinity. 
 
-static const std::vector<double> EMPTY_ANTIGEN {PAD, PAD, PAD, PAD, PAD, PAD};
-static const std::string B_NAIVE_NAME {"B_naive"}; //from config XML
-
+// LEN_VECTOR_SEQUENCE >= max(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= min(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= LEN_AMINOCOMPLETE
+static const int LEN_VECTOR_SEQUENCE = 16;
+static const int LEN_ANTIBODY_SEQUENCE = 8;
+static const int LEN_ANTIGEN_SEQUENCE = 8;
+static const int LEN_AMINOCOMPLETE = 5;  // number of matching antigen antibody amino sequences that account for 100% affinity.
+static const std::vector<double> EMPTY_VECTOR(LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.

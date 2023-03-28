@@ -75,12 +75,6 @@
 Cell_Definition* naive_bcell; 
 Cell_Definition* tfhelper_cell; 
 
-std::vector<double> get_vector_variable(Cell* pCell, std::string name) {
-	int index = pCell->custom_data.find_vector_variable_index(name);
-	if (index < 0 || index >= pCell->custom_data.vector_variables.size())
-		throw std::invalid_argument("The cell has no vector with name `"+ name +"`");
-	return pCell->custom_data.vector_variables[index].value;
-}
 
 void create_cell_types( void )
 {
@@ -276,7 +270,7 @@ void create_naive_bcell_type( void )  {
 
         // antigen variable
         std::vector<double> antigenSequence {'c','a','d','d','c','e','n','k','l','l','c',PAD,PAD,PAD,PAD,PAD};
-	//std::vector<double> antigenSequence = EMPTY_ANTIGEN;
+	//std::vector<double> antigenSequence = EMPTY_VECTOR;
 	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
 
         // antibody variable
@@ -301,7 +295,7 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         printf("number of antibodySequence elements: %ld\n", antibodySequence.value.size());
 
 	//TODO: Mutate antibody if antigen is present
-	if (antigenSequence.value == EMPTY_ANTIGEN)
+	if (antigenSequence.value == EMPTY_VECTOR)
 		return;
 	
 	//printf("***antigenSequence: ");
