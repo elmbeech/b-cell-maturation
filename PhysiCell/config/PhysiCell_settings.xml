@@ -76,6 +76,7 @@
     </microenvironment_setup>
 
     <cell_definitions>
+
         <cell_definition name="B_follicular" ID="0">
             <phenotype>
                 <cycle code="5" name="live">
@@ -85,7 +86,8 @@
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
-                        <death_rate units="1/min">5.31667e-05</death_rate>
+                        <!-- death_rate units="1/min">5.31667e-05</death_rate -->
+                        <death_rate units="1/min">0.0</death_rate>
                         <phase_transition_rates units="1/min">
                             <rate start_index="0" end_index="1" fixed_duration="false">0.001938</rate>
                         </phase_transition_rates>
@@ -172,7 +174,7 @@
                 <secretion>
                     <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
-                        <secretion_target units="substrate density">1.0</secretion_target>
+                        <secretion_target units="substrate density">0.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
                         <net_export_rate units="total substrate/min">0.0</net_export_rate>
                     </substrate>
@@ -197,7 +199,7 @@
                         <attack_rate name="Antibody" units="1/min">0.0</attack_rate>
                         <attack_rate name="Invader" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <damage_rate units="1/min">0.0</damage_rate>
                     <fusion_rates>
                         <fusion_rate name="B_follicular" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="B_naive" units="1/min">0.0</fusion_rate>
@@ -225,6 +227,7 @@
                 <hasAntigen conserved="true" units="bool" description="">1.0</hasAntigen>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="B_naive" ID="1">
             <phenotype>
                 <cycle code="5" name="live">
@@ -234,7 +237,8 @@
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
-                        <death_rate units="1/min">5.31667e-05</death_rate>
+                        <!-- death_rate units="1/min">5.31667e-05</death_rate -->
+                        <death_rate units="1/min">0.0</death_rate>
                         <phase_transition_rates units="1/min">
                             <rate start_index="0" end_index="1" fixed_duration="false">0.001938</rate>
                         </phase_transition_rates>
@@ -346,7 +350,7 @@
                         <attack_rate name="Antibody" units="1/min">0.0</attack_rate>
                         <attack_rate name="Invader" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <damage_rate units="1/min">0.0</damage_rate>
                     <fusion_rates>
                         <fusion_rate name="B_follicular" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="B_naive" units="1/min">0.0</fusion_rate>
@@ -374,19 +378,18 @@
                 <hasAntigen conserved="true" units="bool" description="">0.0</hasAntigen>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="Tf_helper" ID="2">
             <phenotype>
-                <cycle code="6" name="Flow cytometry model (separated)">
+                <cycle code="5" name="live">
                     <phase_durations units="min">
-                        <duration index="0" fixed_duration="false">300.0</duration>
-                        <duration index="1" fixed_duration="true">480</duration>
-                        <duration index="2" fixed_duration="true">240</duration>
-                        <duration index="3" fixed_duration="true">60</duration>
+                        <duration index="0" fixed_duration="false">1388.88889</duration>
                     </phase_durations>
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
-                        <death_rate units="1/min">5.31667e-05</death_rate>
+                        <!-- death_rate units="1/min">5.31667e-05</death_rate -->
+                        <death_rate units="1/min">0.0</death_rate>
                         <phase_durations units="min">
                             <duration index="0" fixed_duration="true">516</duration>
                         </phase_durations>
@@ -472,10 +475,10 @@
                 </motility>
                 <secretion>
                     <substrate name="Quorum_factor">
-                        <secretion_rate units="1/min">0</secretion_rate>
-                        <secretion_target units="substrate density">1</secretion_target>
-                        <uptake_rate units="1/min">0</uptake_rate>
-                        <net_export_rate units="total substrate/min">0</net_export_rate>
+                        <secretion_rate units="1/min">0.0</secretion_rate>
+                        <secretion_target units="substrate density">0.0</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+                        <net_export_rate units="total substrate/min">0.0</net_export_rate>
                     </substrate>
                 </secretion>
                 <cell_interactions>
@@ -498,7 +501,7 @@
                         <attack_rate name="Antibody" units="1/min">0.0</attack_rate>
                         <attack_rate name="Invader" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <damage_rate units="1/min">0.0</damage_rate>
                     <fusion_rates>
                         <fusion_rate name="B_follicular" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="B_naive" units="1/min">0.0</fusion_rate>
@@ -526,6 +529,7 @@
                 <hasAntigen conserved="false" units="bool" description="">1.0</hasAntigen>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="B_memory" ID="3">
             <phenotype>
                 <cycle code="5" name="live">
@@ -535,7 +539,8 @@
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
-                        <death_rate units="1/min">5.31667e-05</death_rate>
+                        <!-- death_rate units="1/min">5.31667e-05</death_rate -->
+                        <death_rate units="1/min">0.0</death_rate>
                         <phase_transition_rates units="1/min">
                             <rate start_index="0" end_index="1" fixed_duration="false">0.001938</rate>
                         </phase_transition_rates>
@@ -622,7 +627,7 @@
                 <secretion>
                     <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
-                        <secretion_target units="substrate density">1.0</secretion_target>
+                        <secretion_target units="substrate density">0.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
                         <net_export_rate units="total substrate/min">0.0</net_export_rate>
                     </substrate>
@@ -647,7 +652,7 @@
                         <attack_rate name="Antibody" units="1/min">0.0</attack_rate>
                         <attack_rate name="Invader" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <damage_rate units="1/min">0.0</damage_rate>
                     <fusion_rates>
                         <fusion_rate name="B_follicular" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="B_naive" units="1/min">0.0</fusion_rate>
@@ -672,9 +677,10 @@
             </phenotype>
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
-                <hasAntigen conserved="true" units="bool" description="">1.0</hasAntigen>
+                <hasAntigen conserved="true" units="bool" description="">0.0</hasAntigen>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="B_plasma" ID="4">
             <phenotype>
                 <cycle code="5" name="live">
@@ -684,7 +690,8 @@
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
-                        <death_rate units="1/min">5.31667e-05</death_rate>
+                        <!-- death_rate units="1/min">5.31667e-05</death_rate -->
+                        <death_rate units="1/min">0.0</death_rate>
                         <phase_transition_rates units="1/min">
                             <rate start_index="0" end_index="1" fixed_duration="false">0.001938</rate>
                         </phase_transition_rates>
@@ -771,7 +778,7 @@
                 <secretion>
                     <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
-                        <secretion_target units="substrate density">1.0</secretion_target>
+                        <secretion_target units="substrate density">0.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
                         <net_export_rate units="total substrate/min">0.0</net_export_rate>
                     </substrate>
@@ -796,7 +803,7 @@
                         <attack_rate name="Antibody" units="1/min">0.0</attack_rate>
                         <attack_rate name="Invader" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <damage_rate units="1/min">0.0</damage_rate>
                     <fusion_rates>
                         <fusion_rate name="B_follicular" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="B_naive" units="1/min">0.0</fusion_rate>
@@ -824,6 +831,7 @@
                 <hasAntigen conserved="true" units="bool" description="">1.0</hasAntigen>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="Antibody" ID="5">
             <phenotype>
                 <cycle code="5" name="live">
@@ -833,7 +841,8 @@
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
-                        <death_rate units="1/min">5.31667e-05</death_rate>
+                        <!-- death_rate units="1/min">5.31667e-05</death_rate -->
+                        <death_rate units="1/min">0.0</death_rate>
                         <phase_transition_rates units="1/min">
                             <rate start_index="0" end_index="1" fixed_duration="false">0.001938</rate>
                         </phase_transition_rates>
@@ -920,7 +929,7 @@
                 <secretion>
                     <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
-                        <secretion_target units="substrate density">1.0</secretion_target>
+                        <secretion_target units="substrate density">0.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
                         <net_export_rate units="total substrate/min">0.0</net_export_rate>
                     </substrate>
@@ -945,7 +954,7 @@
                         <attack_rate name="Antibody" units="1/min">0.0</attack_rate>
                         <attack_rate name="Invader" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <damage_rate units="1/min">0.0</damage_rate>
                     <fusion_rates>
                         <fusion_rate name="B_follicular" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="B_naive" units="1/min">0.0</fusion_rate>
@@ -973,6 +982,7 @@
                 <hasAntigen conserved="false" units="bool" description="">0.0</hasAntigen>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="Invader" ID="6">
             <phenotype>
                 <cycle code="5" name="live">
@@ -982,7 +992,8 @@
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
-                        <death_rate units="1/min">5.31667e-05</death_rate>
+                        <!-- death_rate units="1/min">5.31667e-05</death_rate -->
+                        <death_rate units="1/min">0.0</death_rate>
                         <phase_transition_rates units="1/min">
                             <rate start_index="0" end_index="1" fixed_duration="false">0.001938</rate>
                         </phase_transition_rates>
@@ -1069,7 +1080,7 @@
                 <secretion>
                     <substrate name="Quorum_factor">
                         <secretion_rate units="1/min">0.0</secretion_rate>
-                        <secretion_target units="substrate density">1.0</secretion_target>
+                        <secretion_target units="substrate density">0.0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
                         <net_export_rate units="total substrate/min">0.0</net_export_rate>
                     </substrate>
@@ -1094,7 +1105,7 @@
                         <attack_rate name="Antibody" units="1/min">0.0</attack_rate>
                         <attack_rate name="Invader" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <damage_rate units="1/min">0.0</damage_rate>
                     <fusion_rates>
                         <fusion_rate name="B_follicular" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="B_naive" units="1/min">0.0</fusion_rate>
@@ -1119,9 +1130,10 @@
             </phenotype>
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
-                <hasAntigen conserved="false" units="bool" description="">0.0</hasAntigen>
+                <hasAntigen conserved="false" units="bool" description="">1.0</hasAntigen>
             </custom_data>
         </cell_definition>
+
     </cell_definitions>
 
     <initial_conditions>
