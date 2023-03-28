@@ -75,10 +75,6 @@
 Cell_Definition* naive_bcell; 
 Cell_Definition* tfhelper_cell; 
 
-const int B_NAIVE_ID = 1; //from config XML
-const std::vector<double> EMPTY_ANTIGEN = {0, 0, 0, 0, 0, 0};
-
-
 std::vector<double> get_vector_variable(Cell* pCell, std::string name) {
 	int index = pCell->custom_data.find_vector_variable_index(name);
 	if (index < 0 || index >= pCell->custom_data.vector_variables.size())
@@ -243,7 +239,7 @@ void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	int numTouching = pCell->state.neighbors.size();
 	for (int i = 0; i < numTouching; i++) {
 		Cell* neighbor = pCell->state.neighbors[i];
-		if (neighbor->type == B_NAIVE_ID) {
+		if (neighbor->type_name == B_NAIVE_NAME) {
 			pCell->is_movable = false;
 			pCell->attach_cell(neighbor);
 			pCell->functions.update_phenotype = NULL;

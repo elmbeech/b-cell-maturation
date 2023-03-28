@@ -66,24 +66,24 @@
 */
 
 #include "../core/PhysiCell.h"
-#include "../modules/PhysiCell_standard_modules.h" 
+#include "../modules/PhysiCell_standard_modules.h"
 
-using namespace BioFVM; 
+using namespace BioFVM;
 using namespace PhysiCell;
 
-// setup functions to help us along 
+// setup functions to help us along
 
 void create_cell_types( void );
-void setup_tissue( void ); 
+void setup_tissue( void );
 
-// set up the BioFVM microenvironment 
-void setup_microenvironment( void ); 
+// set up the BioFVM microenvironment
+void setup_microenvironment( void );
 
-// custom pathology coloring function 
+// custom pathology coloring function
 
 std::vector<std::string> my_coloring_function( Cell* );
 
-// custom functions can go here 
+// custom functions can go here
 
 void phenotype_function( Cell* pCell, Phenotype& phenotype, double dt );
 void custom_function( Cell* pCell, Phenotype& phenotype , double dt );
@@ -95,3 +95,14 @@ void create_naive_tfhelper_cell_type( void );
 
 void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
 void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+
+// custom constantes
+//letters not in the human amino acid alphabet: b,j,o,u,x,z
+//static const double ALPHABET[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman amino acide alphabet
+static const double ALPHABET[] {'a','t','c','g'};  // oligo nucleotide alphabet
+static const double PAD {0};
+static const double AMINOCOMPLETE = 10;  // number of matching antigen antibody amino sequences that account for 100% affinity. 
+
+static const std::vector<double> EMPTY_ANTIGEN {PAD, PAD, PAD, PAD, PAD, PAD};
+static const std::string B_NAIVE_NAME {"B_naive"}; //from config XML
+
