@@ -58,7 +58,7 @@ PhysiCell_pugixml.o PhysiCell_settings.o PhysiCell_geometry.o
 
 # put your custom objects here (they should be in the custom_modules directory)
 
-PhysiCell_custom_module_OBJECTS := custom.o hamming.o
+PhysiCell_custom_module_OBJECTS := custom.o
 
 pugixml_OBJECTS := pugixml.o
 
@@ -168,9 +168,6 @@ PhysiCell_geometry.o: ./modules/PhysiCell_geometry.cpp
 custom.o: ./custom_modules/custom.cpp 
 	$(COMPILE_COMMAND) -c ./custom_modules/custom.cpp
 
-hamming.o: ./custom_modules/hamming.cpp 
-	$(COMPILE_COMMAND) -c ./custom_modules/hamming.cpp
-
 # cleanup
 
 reset:
@@ -234,7 +231,7 @@ jpeg:
 	rm -f __H*.txt __W*.txt __resize.txt 
 	
 gif: 
-	magick convert $(OUTPUT)/s*.svg $(OUTPUT)/out.gif 
+	@magick convert $(OUTPUT)/s*.svg $(OUTPUT)/out.gif 
 	 
 movie:
 	ffmpeg -r $(FRAMERATE) -f image2 -i $(OUTPUT)/snapshot%08d.jpg -vcodec libx264 -pix_fmt yuv420p -strict -2 -tune animation -crf 15 -acodec none $(OUTPUT)/out.mp4
