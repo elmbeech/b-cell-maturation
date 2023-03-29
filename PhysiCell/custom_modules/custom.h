@@ -71,6 +71,8 @@
 using namespace BioFVM;
 using namespace PhysiCell;
 
+
+
 // setup functions to help us along
 
 void create_cell_types( void );
@@ -90,11 +92,21 @@ void custom_function( Cell* pCell, Phenotype& phenotype , double dt );
 
 void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& phenoOther , double dt );
 
-void create_naive_bcell_type( void );
-void create_naive_tfhelper_cell_type( void );
+//void create_invader_type( void );
+void create_tfhelper_cell_type( void );
+void create_bnaive_cell_type( void );
+void create_bfollicular_cell_type( void );
+void create_bplasma_cell_type( void );
+//void create_bmemory_cell_type( void );
+//void create_antibody_type( void );
 
-void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+//void invader_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
 void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+void bnaive_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+//void bplasma_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+//void bmemory_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+//void antibody_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
 
 // custom constantes
 static const std::string B_NAIVE_NAME {"B_naive"}; //from config XML
@@ -109,4 +121,5 @@ static const int LEN_VECTOR_SEQUENCE = 16;
 static const int LEN_ANTIBODY_SEQUENCE = 8;
 static const int LEN_ANTIGEN_SEQUENCE = 8;
 static const int LEN_AMINOCOMPLETE = 5;  // number of matching antigen antibody amino sequences that account for 100% affinity.
+static const int MUTATION = 1;  // number antibody sequence mutations per follicular B cell division.
 static const std::vector<double> EMPTY_VECTOR(LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.

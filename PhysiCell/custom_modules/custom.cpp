@@ -72,8 +72,13 @@
 #include "./custom.h"
 #include "./hamming.h"
 
-Cell_Definition* naive_bcell; 
-Cell_Definition* tfhelper_cell; 
+//Cell_Definition* invader;  //TODO
+Cell_Definition* tfhelper_cell;
+Cell_Definition* bnaive_cell;
+Cell_Definition* bfollicular_cell;
+Cell_Definition* bplasma_cell;
+//Cell_Definition* bmemory_cell;
+//Cell_Definition* antibody;  //TODO
 
 
 void create_cell_types( void )
@@ -130,9 +135,13 @@ void create_cell_types( void )
 	cell_defaults.functions.custom_cell_rule = custom_function;
 	cell_defaults.functions.contact_function = contact_function;
 
-        create_naive_bcell_type();
-	create_naive_tfhelper_cell_type();
-	
+	//create_invader_type();   // TODO
+	create_tfhelper_cell_type();
+        create_bnaive_cell_type();
+        create_bplasma_cell_type();
+        //create_bmemory_cell_type();  // BUE: only exist through transition
+	//create_antibody_type();  // BUE: only exist through transition
+
 	/*
 	   This builds the map of cell definitions and summarizes the setup.
 	*/
@@ -144,17 +153,17 @@ void create_cell_types( void )
 
 void setup_microenvironment( void )
 {
-	// set domain parameters 
-	
-	// put any custom code to set non-homogeneous initial conditions or 
+	// set domain parameters
+
+	// put any custom code to set non-homogeneous initial conditions or
 	// extra Dirichlet nodes here.
   	srand(time(NULL));
-	
-	// initialize BioFVM 
-	
-	initialize_microenvironment(); 	
-	
-	return; 
+
+	// initialize BioFVM
+
+	initialize_microenvironment();
+
+	return;
 }
 
 void setup_tissue( void )
@@ -218,18 +227,21 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 
 
 // follicular T helper cell
-void create_naive_tfhelper_cell_type( void )  {
+void create_tfhelper_cell_type( void )  {
 	tfhelper_cell = find_cell_definition( "Tf_helper" );
 
-	std::vector<double> antigenSequence = {'C', 'B', 'A', 'B', 'C', 'D'};	
+	std::vector<double> antigenSequence = generateSequence( LEN_ANTIGEN_SEQUENCE );
 	tfhelper_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
 
-	tfhelper_cell->functions.update_phenotype = tfhelper_cell_phenotype; 
+	std::vector<double> antibodySequence = EMPTY_VECTOR;
+	tfhelper_cell->custom_data.add_vector_variable( "antibodySequence", antibodySequence);
+
+	tfhelper_cell->functions.update_phenotype = tfhelper_cell_phenotype;
 }
 
 void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	std::vector<double> foreignAntigen = get_vector_variable(pCell, "antigenSequence");
-	
+
 	int numTouching = pCell->state.neighbors.size();
 	for (int i = 0; i < numTouching; i++) {
 		Cell* neighbor = pCell->state.neighbors[i];
@@ -237,17 +249,17 @@ void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 			pCell->is_movable = false;
 			pCell->attach_cell(neighbor);
 			pCell->functions.update_phenotype = NULL;
-			
+
 			//Transfer antigen to B cell
 			int antigenIndex = neighbor->custom_data.find_vector_variable_index("antigenSequence");
 			neighbor->custom_data.vector_variables[antigenIndex].value = foreignAntigen;
-			
-			// set_single_behavior(neighbor, "transform to B_follicular", 1e9); //FIXME
 
+			// set_single_behavior(neighbor, "transform to B_follicular", 1e9); //FIXME
+                        // BUE 20230328: I tink the naive B cell should initate its transfromation, not the Tf helper cell
 			return;
 		}
 	}
-	
+
 	// increase migration bias in higher quorum factor
 	double q = get_single_signal( pCell, "Quorum_factor");
 	double b0 = get_single_base_behavior( pCell, "migration bias");
@@ -259,61 +271,96 @@ void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	// double s0 = get_single_base_behavior( pCell, "migration speed");
 	// double sM = 0.1*s0;
 	// double s = s0 + (sM-s0)*decreasing_linear_response_function( q , 0.5, 0.75 );
-	// set_single_behavior( pCell , "migration speed" , s ); 
+	// set_single_behavior( pCell , "migration speed" , s );
 }
 
 
 // naive B cell
-void create_naive_bcell_type( void )  {
+void create_bnaive_cell_type( void )  {
+        // from xml
+	bnaive_cell = find_cell_definition( "B_naive" );
 
-	naive_bcell = find_cell_definition( "B_naive" );
-
-        // antigen variable
-        std::vector<double> antigenSequence {'c','a','d','d','c','e','n','k','l','l','c',PAD,PAD,PAD,PAD,PAD};
-	//std::vector<double> antigenSequence = EMPTY_VECTOR;
-	naive_bcell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+        // antigen variablae
+	std::vector<double> antigenSequence = EMPTY_VECTOR;
+	bnaive_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
 
         // antibody variable
-	std::vector<double> antibodySequence = {'A','a','0','1','0',0.1,2,'a','b','c'}; 
-	//std::vector<double> antibodySequence = {1, 0, 0,}; 
-	naive_bcell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+	std::vector<double> antibodySequence = EMPTY_VECTOR;
+	bnaive_cell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
 
 	// update phenotype
-	naive_bcell->functions.update_phenotype = naive_bcell_phenotype; 
+	bnaive_cell->functions.update_phenotype = bnaive_cell_phenotype;
 }
 
-void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
+void bnaive_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 
         // antigen sequence
 	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
 	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
-        printf("number of antigenSequence elements: %ld\n", antigenSequence.value.size());
 
-        // antibody sequence
+
+	// shodul I transform to follicular B cell?
+	if ( antigenSequence.value != EMPTY_VECTOR ) {
+	    printf("\nYay, got antigen, transform to B_follicular cell!\n");
+
+            // antibody sequence
+	    int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
+	    Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
+	    antibodySequence.value = generateSequence( LEN_ANTIBODY_SEQUENCE );
+
+            // phenotype
+	    set_single_behavior(pCell, "transform to B_follicular", 9e9);
+
+            printSequence(antigenSequence.value);
+            printSequence(antibodySequence.value);
+        }
+}
+
+
+// follicular B cell
+void create_bfollicular_cell_type( void )  {
+        // from xml
+	bfollicular_cell = find_cell_definition( "B_follicular" );
+
+        // antigen variablae
+	std::vector<double> antigenSequence = EMPTY_VECTOR;
+	bfollicular_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+
+        // antibody variable
+	std::vector<double> antibodySequence = EMPTY_VECTOR;
+	bfollicular_cell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+
+	// update phenotype
+	bfollicular_cell->functions.update_phenotype = bfollicular_cell_phenotype;
+}
+
+
+void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
+
+	printf("I am a B_follicular cell!\n");
+        // load antigen and anibody sequence
+	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
+	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
+        printSequence( antigenSequence.value);
+
 	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
 	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
-        printf("number of antibodySequence elements: %ld\n", antibodySequence.value.size());
+        printSequence( antibodySequence.value);
 
-	//TODO: Mutate antibody if antigen is present
-	if (antigenSequence.value == EMPTY_VECTOR)
-		return;
-	
-	//printf("***antigenSequence: ");
-	//for (double element : antigenSequence.value) {
-	//	printf("{%g}", element);
-	//}
-	//printf("***\n");
-
-	// printf("***antibodySequence: ");
-	// for (double element : antibodySequence.value) {
-	// 	printf("{%g}", element);
-	// }
-	// printf("***\n"); 
-
+	// mutate inherited antibody sequnece by cell division!!!
+        mutateSequence( antibodySequence.value, MUTATION );
 
         // get alignment signal
         double hammscore = alignment ( antigenSequence,  antibodySequence );
         printf("alignment hamming score: %g\n", hammscore);
+
+	// shodul I transform to a plasma or a memory B cell?
+	if ( hammscore > 0.9) {
+	    set_single_behavior(pCell, "transform to B_plasma", 9e9);
+        }
+	else{
+	    printf("Alignment not specific enough, stay follicular.\n");
+	}
 
         // get pressure signal
         double pressure = get_single_signal( pCell , "pressure");
@@ -336,32 +383,29 @@ void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
         // 60[min] * rM[1/min] = 1
         double s1Apoptosis = 0.98 / 60;
 
-        // bue 20130322: getting the complete formula adjusted will need some analysis. 
+        // bue 20130322: getting the complete formula adjusted will need some analysis.
 	// rule of pressure and alignment score to steer apoptosis rate
 	//double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure + (1 - hammscore)) / 2;
 	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
 
         set_single_behavior( pCell, "apoptosis" , rApoptosis );
         printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
+}
 
-	///Jays code:
-	///we need to tranform when the "correct" sequence is recieved
-	///first lets always transform!
-	//boo
-	// double isTransform = alignment(antibodySequence, antigenSequence);
-	// printf("score: %g", isTransform);
-	// long antibodyLen = antibodySequence.value.size();
-	// long antigenLen = antigenSequence.value.size();
-	// double anti;
-	//
-	// if(isTransform >= .7) {
-	// 	set_single_behavior(pCell, "transform to B_follicular", 9e9);
-	// }
-	// else if(isTransform >= .90){
-	// 	set_single_behavior(pCell, "transform to B_plasma", 9e9);
-	// }
-	// else{
-	// 	printf("There was no change, stay naive\n");
-	// }
+// plasma B cell
+void create_bplasma_cell_type( void )  {
+        // from xml
+	bplasma_cell = find_cell_definition( "B_plasma" );
+
+        // antigen variablae
+	std::vector<double> antigenSequence = EMPTY_VECTOR;
+	bplasma_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+
+        // antibody variable
+	std::vector<double> antibodySequence = EMPTY_VECTOR;
+	bplasma_cell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+
+	// update phenotype
+	//bplasma_cell->functions.update_phenotype = bplasma_cell_phenotype;
 }
 

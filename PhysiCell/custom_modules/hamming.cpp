@@ -16,7 +16,7 @@
 
 
 // get vector_variable, check thereby if the variable name exist
-std::vector<double> get_vector_variable(Cell* pCell, std::string name) {
+std::vector<double> get_vector_variable( Cell* pCell, std::string name ) {
     int index = pCell->custom_data.find_vector_variable_index(name);
     if (index < 0 || index >= pCell->custom_data.vector_variables.size())
         throw std::invalid_argument("The cell has no vector with name `"+ name +"`");
@@ -30,7 +30,7 @@ std::vector<double> probabilities(alphabetLength, 1.0 / alphabetLength);
 
 
 // generate antibody/antigen sequence given actual length of coding sequence, and length of vector
-std::vector<double> generateSequence(int lenSequence) {
+std::vector<double> generateSequence( int lenSequence ) {
     int lenPad = LEN_VECTOR_SEQUENCE - lenSequence;
     std::vector<double> sequence;
     for (size_t i = 0; i < lenSequence; ++i) {
@@ -39,6 +39,7 @@ std::vector<double> generateSequence(int lenSequence) {
     for (size_t i = 0; i < lenPad; ++i) {
         sequence.push_back(PAD);
     }
+    printSequence(sequence);
     return sequence;
 }
 
@@ -58,7 +59,7 @@ void mutateSequence( std::vector<double>& sequence, int mutations ) {
     }
 
     // Create equal probability vector to choose from the sequence
-    std::vector<double> mutateProbabilities(sequenceLength, 1.0 / sequenceLength);
+    std::vector<double> mutateProbabilities( sequenceLength, 1.0 / sequenceLength );
 
     // Mutate the sequence
     for (size_t i = 0; i < mutations; ++i) {
@@ -71,7 +72,7 @@ void mutateSequence( std::vector<double>& sequence, int mutations ) {
 void printSequence( std::vector<double>& sequence ) {
     printf("sequence: ");
     for (const auto& element : sequence) {
-        if ((int)element==0) {
+        if ((int)element == PAD) {
             printf(" %d", (int)element);
         } else {
             printf(" %c", (int)element);
@@ -82,75 +83,75 @@ void printSequence( std::vector<double>& sequence ) {
 
 
 // qunatify hamming distance from to antigen antibody sequences of variable size.
-double alignment(Vector_Variable antigenSequence, Vector_Variable antibodySequence) {
+double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence ) {
 
     // strip input
-    std::vector<double> antigen {};
-    std::vector<double> antibody {};
+    std::vector<double> antigenCode {};
+    std::vector<double> antibodyCode {};
 
     for (double element : antigenSequence.value) {
         if (element != PAD) {
-            antigen.push_back(element);
+            antigenCode.push_back(element);
         }
     }
     for (double element : antibodySequence.value) {
         if (element != PAD) {
-            antibody.push_back(element);
+            antibodyCode.push_back(element);
         }
     }
 
     // print seqeunces
-    printSequence(antigen);
-    printSequence(antibody);
+    printSequence(antigenCode);
+    printSequence(antibodyCode);
 
     // find smaller slide sequence and pad the longer one
-    std::vector<double> padded_sequence {};
-    std::vector<double>* topad_sequence {};
-    std::vector<double> slide_sequence {};
+    std::vector<double> paddedSequence {};
+    std::vector<double>* topadSequence {};
+    std::vector<double> slideSequence {};
 
-    int i_antigen = antigen.size();
-    int i_antibody = antibody.size();
+    int i_antigen = antigenCode.size();
+    int i_antibody = antibodyCode.size();
 
     if (i_antigen <= i_antibody) {
-        slide_sequence = antigen;
-        topad_sequence = &antibody;
+        slideSequence = antigenCode;
+        topadSequence = &antibodyCode;
     }
     else {
-        slide_sequence = antibody;
-        topad_sequence = &antigen;
+        slideSequence = antibodyCode;
+        topadSequence = &antigenCode;
     }
 
-    for (double element : slide_sequence) {
-        padded_sequence.push_back(PAD);
+    for (double element : slideSequence) {
+        paddedSequence.push_back(PAD);
     }
-    for (double element : *topad_sequence) {
-        padded_sequence.push_back(element);
+    for (double element : *topadSequence) {
+        paddedSequence.push_back(element);
     }
-    for (double element : slide_sequence) {
-        padded_sequence.push_back(PAD);
+    for (double element : slideSequence) {
+        paddedSequence.push_back(PAD);
     }
 
     // print seqeunces
-    printSequence(padded_sequence);
-    printSequence(slide_sequence);
+    printSequence(paddedSequence);
+    printSequence(slideSequence);
 
     // get hamming distance.
     double i_hammdist_max = 0.0;
-    int i_slide = slide_sequence.size();
-    int i_padded = padded_sequence.size() - i_slide;
+    int i_slide = slideSequence.size();
+    int i_padded = paddedSequence.size() - i_slide;
 
     for (size_t i=0; i <= i_padded; i++) {
         double i_hammdist = 0.0;
         printf("***sequence intersection: ");
         for (size_t j=i; j < (i + i_slide); j++) {
-            if (padded_sequence[j] == slide_sequence[j-i]) {
+            if (paddedSequence[j] == slideSequence[j-i]) {
                 i_hammdist = i_hammdist + 1.0;
             }
             // print slide sequences
-            if ((int) padded_sequence[j] == 0) {
-                printf(" %d", (int) padded_sequence[j]);
+            if ((int) paddedSequence[j] == 0) {
+                printf(" %d", (int) paddedSequence[j]);
             } else {
-                printf(" %c", (int) padded_sequence[j]);
+                printf(" %c", (int) paddedSequence[j]);
             }
         }
         printf("*** hamming distance: %g.\n", i_hammdist);
