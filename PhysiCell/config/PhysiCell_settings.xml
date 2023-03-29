@@ -77,6 +77,7 @@
     </microenvironment_setup>
 
     <cell_definitions>
+
         <cell_definition name="Invader" ID="0">
             <phenotype>
                 <cycle code="5" name="live">
@@ -225,6 +226,7 @@
                 <sample conserved="false" units="dimensionless" description="">1.0</sample>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="Tf_helper" ID="1">
             <phenotype>
                 <cycle code="5" name="live">
@@ -294,18 +296,18 @@
                     <cell_BM_adhesion_strength units="micron/min">4.0</cell_BM_adhesion_strength>
                     <cell_BM_repulsion_strength units="micron/min">10.0</cell_BM_repulsion_strength>
                     <attachment_elastic_constant units="1/min">0.01</attachment_elastic_constant>
-                    <attachment_rate units="1/min">0.0</attachment_rate>
+                    <attachment_rate units="1/min">10.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
                 </mechanics>
                 <motility>
-                    <speed units="micron/min">5.0</speed>
+                    <speed units="micron/min">10.0</speed>
                     <persistence_time units="min">1.0</persistence_time>
                     <migration_bias units="dimensionless">0.5</migration_bias>
                     <options>
                         <enabled>true</enabled>
                         <use_2D>true</use_2D>
                         <chemotaxis>
-                            <enabled>true</enabled>
+                            <enabled>false</enabled>
                             <substrate>Quorum_factor</substrate>
                             <direction>1</direction>
                         </chemotaxis>
@@ -373,6 +375,7 @@
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="B_follicular" ID="2">
             <phenotype>
                 <cycle code="5" name="live">
@@ -521,6 +524,7 @@
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="B_memory" ID="3">
             <phenotype>
                 <cycle code="5" name="live">
@@ -669,6 +673,7 @@
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="B_plasma" ID="4">
             <phenotype>
                 <cycle code="5" name="live">
@@ -817,6 +822,7 @@
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="Antibody" ID="5">
             <phenotype>
                 <cycle code="5" name="live">
@@ -965,6 +971,7 @@
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
             </custom_data>
         </cell_definition>
+
         <cell_definition name="B_naive" ID="6">
             <phenotype>
                 <cycle code="5" name="live">
@@ -1034,7 +1041,7 @@
                     <cell_BM_adhesion_strength units="micron/min">4.0</cell_BM_adhesion_strength>
                     <cell_BM_repulsion_strength units="micron/min">10.0</cell_BM_repulsion_strength>
                     <attachment_elastic_constant units="1/min">0.01</attachment_elastic_constant>
-                    <attachment_rate units="1/min">0.0</attachment_rate>
+                    <attachment_rate units="1/min">10.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
                 </mechanics>
                 <motility>
@@ -1113,6 +1120,7 @@
                 <sample conserved="false" units="dimensionless" description="">0.0</sample>
             </custom_data>
         </cell_definition>
+
     </cell_definitions>
 
     <initial_conditions>
