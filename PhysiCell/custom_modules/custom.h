@@ -95,8 +95,8 @@ void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& 
 void create_tfhelper_cell_type( void );
 void create_bnaive_cell_type( void );
 void create_bfollicular_cell_type( void );
-void create_bplasma_cell_type( void );
 //void create_bmemory_cell_type( void );
+void create_bplasma_cell_type( void );
 //void create_antibody_type( void );
 
 //void invader_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
