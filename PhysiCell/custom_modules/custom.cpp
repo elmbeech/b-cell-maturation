@@ -382,6 +382,7 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
 
 	// mutate inherited antibody sequnece, but only by cell dividion and only one offspring cell!
         mutateSequence( antibodySequence.value, MUTATION );
+        pCell->custom_data.vector_variables[antibodyIndex].value = antibodySequence.value;
         printSequence( antibodySequence.value, "Mutated : ");
 
         // get alignment signal
@@ -389,7 +390,7 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
         printf("alignment hamming score: %g\n", hammscore);
 
 	// shodul I transform to a plasma or a memory B cell?
-	if ( hammscore > 0.8) {
+	if ( hammscore > 0.98) {
 	    printf("Yay, high hamming score, transform to B_plasma cell!\n");
 	    set_single_behavior( pCell, "transform to B_plasma", 9e9 );
             return;
