@@ -66,6 +66,7 @@
 */
 #include <cstdio>
 #include <stdlib.h>
+#include <string>
 #include <time.h>
 #include <typeinfo>
 #include <vector>
@@ -87,7 +88,7 @@ Cell_Definition* bplasma_cell;
 //letters not in the human amino acid alphabet: b,j,o,u,x,z
 //static const double ALPHABET[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman amino acide alphabet
 static const double ALPHABET[] {'a','t','c','g'};  // oligo nucleotide alphabet
-static const double PAD {0};
+static const double PAD = 0;
 
 // LEN_VECTOR_SEQUENCE >= max(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= min(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= LEN_AMINOCOMPLETE
 static const int LEN_VECTOR_SEQUENCE = 16;
@@ -95,8 +96,8 @@ static const int LEN_ANTIBODY_SEQUENCE = 8;
 static const int LEN_ANTIGEN_SEQUENCE = 8;
 static const int LEN_AMINOCOMPLETE = 5;  // number of matching antigen antibody amino sequences that account for 100% affinity.
 static const int MUTATION = 1;  // number antibody sequence mutations per follicular B cell division.
-//static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.
-std::vector<double> EMPTY_VECTOR {PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD};  // generate empty antigen antybody vector.
+static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.
+//static const std::vector<double> EMPTY_VECTOR {PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD};  // generate empty antigen antybody vector.
 
 // specify equal probabilities to choose from ALPHABET with choose_event
 size_t alphabetLength = sizeof(ALPHABET) / sizeof(ALPHABET[0]);
@@ -280,7 +281,7 @@ void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 		if (neighbor->type_name == "B_naive") {
 			pCell->is_movable = false;
 			pCell->attach_cell(neighbor);
-			//pCell->functions.update_phenotype = NULL;  
+			//pCell->functions.update_phenotype = NULL;
                         // BUE 20230329: i think the phenotype function should be set in the create function?
 
 			//Transfer antigen to B cell
@@ -330,20 +331,20 @@ void bnaive_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
 	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
 
-
 	// shodul I transform to follicular B cell?
 	if ( antigenSequence.value != EMPTY_VECTOR ) {
-	    printf("\nYay, got antigen, transform to B_follicular cell!\n");
-
             // antibody sequence
 	    int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
-	    Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
-	    antibodySequence.value = generateSequence( LEN_ANTIBODY_SEQUENCE );
+            pCell->custom_data.vector_variables[antibodyIndex].value = generateSequence(LEN_ANTIBODY_SEQUENCE);
 
             // phenotype
 	    set_single_behavior(pCell, "transform to B_follicular", 9e9);
-	    // update phenotype
-	    //pCell->functions.update_phenotype = bfollicular_cell_phenotype;
+
+            // print
+	    printf("\nYay, got antigen, transform to B_follicular cell!\n");
+            printSequence(antigenSequence.value, "Antigen: ");
+            Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
+            printSequence(antibodySequence.value, "Antibody: ");
         }
 }
 
@@ -367,40 +368,39 @@ void create_bfollicular_cell_type( void )  {
 
 void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 
-	printf("I am a B_follicular cell!\n");
         // load antigen and anibody sequence
 	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
 	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
-        //printSequence( antigenSequence.value);
 
 	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
 	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
-        //printSequence( antibodySequence.value);
 
-	// mutate inherited antibody sequnece by cell division!!!
-        printf("mutation:\n");
-        printSequence( antibodySequence.value);
+        // print
+	printf("now I am a B_follicular cell!\n");
+        printSequence( antigenSequence.value, "Antigen: ");
+        printSequence( antibodySequence.value, "Antibody: ");
+
+	// mutate inherited antibody sequnece, but only by cell dividion and only one offspring cell!
         mutateSequence( antibodySequence.value, MUTATION );
-        //printSequence( antibodySequence.value);
+        printSequence( antibodySequence.value, "Mutated : ");
 
         // get alignment signal
-        double hammscore = alignment ( antigenSequence,  antibodySequence );
+        double hammscore = alignment ( antigenSequence,  antibodySequence , false);
         printf("alignment hamming score: %g\n", hammscore);
 
 	// shodul I transform to a plasma or a memory B cell?
-	//if ( hammscore > 0.9) {
-	//    set_single_behavior(pCell, "transform to B_plasma", 9e9);
-        //}
-	//else{
-	//    printf("Alignment not specific enough, stay follicular.\n");
-	//}
+	if ( hammscore > 0.8) {
+	    printf("Yay, high hamming score, transform to B_plasma cell!\n");
+	    set_single_behavior( pCell, "transform to B_plasma", 9e9 );
+            return;
+        }
 
         // get pressure signal
-        double pressure = get_single_signal( pCell , "pressure");
+        double pressure = get_single_signal(pCell , "pressure");
         // min pressure will be 0 [?]
         // max pressure - I have no idea. pragmatically set to 10. [?]
         double s0Pressure {0.0};
-        double s1Pressure {10.0};
+        double s1Pressure {100.0};
         // get the response functions
         double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
         printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
@@ -446,9 +446,9 @@ void create_bplasma_cell_type( void )  {
 
 
 
-// Print antibody/antigen sequence
-void printSequence( std::vector<double>& sequence ) {
-    printf("sequence: ");
+// print antibody/antigen sequence
+void printSequence( std::vector<double>& sequence, std::string prefix = "sequence: " ) {
+    for (char element : prefix) printf("%c", element);
     for (double element : sequence) {
         if (element == PAD) {
             printf("{%d}", (int)element);
@@ -470,9 +470,10 @@ std::vector<double> generateSequence( int lenSequence ) {
     for (size_t i = 0; i < lenPad; ++i) {
         sequence.push_back(PAD);
     }
-    //printSequence(sequence);
+    //printSequence(sequence, "Generated sequence: ");
     return sequence;
 }
+
 
 // Mutate antibody/antigen sequence given sequence and number of mutations (doesn't affect padding)
 // This function can mutate the same letter twice, which can be fixed by changing mutateProbabilities after each mutation
@@ -499,7 +500,7 @@ void mutateSequence( std::vector<double>& sequence, int mutations ) {
 
 
 // qunatify hamming distance from to antigen antibody sequences of variable size.
-double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence ) {
+double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence , bool verbose = false) {
 
     // strip input
     std::vector<double> antigenCode {};
@@ -516,9 +517,11 @@ double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySeque
         }
     }
 
-    // print seqeunces
-    printSequence(antigenCode);
-    printSequence(antibodyCode);
+    // print stripped seqeunces
+    if (verbose) {
+        printSequence(antigenCode, "Antigen code");
+        printSequence(antibodyCode,  "Antibody code");
+    }
 
     // find smaller slide sequence and pad the longer one
     std::vector<double> paddedSequence {};
@@ -548,8 +551,10 @@ double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySeque
     }
 
     // print seqeunces
-    printSequence(paddedSequence);
-    printSequence(slideSequence);
+    if (verbose) {
+        printSequence(paddedSequence, "Padded sequence: ");
+        printSequence(slideSequence, "Slide sequence: ");
+    }
 
     // get hamming distance.
     double i_hammdist_max = 0.0;
@@ -557,23 +562,21 @@ double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySeque
     int i_padded = paddedSequence.size() - i_slide;
 
     for (size_t i=0; i <= i_padded; i++) {
+        if (verbose) printf("Sequence intersection: ***");
         double i_hammdist = 0.0;
-        printf("***sequence intersection: ");
         for (size_t j=i; j < (i + i_slide); j++) {
             if (paddedSequence[j] == slideSequence[j-i]) {
                 i_hammdist = i_hammdist + 1.0;
             }
-            // print slide sequences
-            if ((int) paddedSequence[j] == 0) {
-                printf(" %d", (int) paddedSequence[j]);
-            } else {
-                printf(" %c", (int) paddedSequence[j]);
+            if (verbose) {
+                if ((int) paddedSequence[j] == PAD) printf("{%d}", (int) paddedSequence[j]);
+                else printf("{%c}", (int) paddedSequence[j]);
             }
         }
-        printf("*** hamming distance: %g.\n", i_hammdist);
         if (i_hammdist_max < i_hammdist) {
             i_hammdist_max = i_hammdist;
         }
+        if (verbose) printf("*** hamming distance: %g.\n", i_hammdist);
     }
 
     // calcualte hamming distance score.
@@ -581,11 +584,13 @@ double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySeque
         printf("Warning : LEN_AMINOCOMPLETE {%d} is greater than the smaller squence {%d}, hamming score can never reach 1!\n", (int) LEN_AMINOCOMPLETE, i_slide);
     }
 
-    double r_hammscore =  i_hammdist_max / LEN_AMINOCOMPLETE;
+    double r_hammscore = i_hammdist_max / LEN_AMINOCOMPLETE;
     if (r_hammscore > 1) {
         r_hammscore = 1;
     }
 
     // output
+    if (verbose) printf("Sequence intersection: ***");
+        printf("hamming distance score: %g.\n", r_hammscore);
     return(r_hammscore);
 }
