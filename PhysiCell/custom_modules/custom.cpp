@@ -381,10 +381,11 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
         printSequence( antibodySequence.value, "Antibody: ");
 
 	// mutate inherited antibody sequnece, but only by cell dividion and only one offspring cell!
+    double mutationChance = 0.5;
     // If cell divided less than 6 minutes ago
     if (phenotype.cycle.data.elapsed_time_in_phase < 6.0f){
         // 50% chance to mutate sequence
-        std::vector<double> mutateProbability = {0.5, 0.5};
+        std::vector<double> mutateProbability = {1-mutationChance, mutationChance};
         if(choose_event(mutateProbability)) {
             mutateSequence( antibodySequence.value, MUTATION );
             pCell->custom_data.vector_variables[antibodyIndex].value = antibodySequence.value;
