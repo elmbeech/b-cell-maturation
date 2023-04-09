@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Start B-cell Project",
+            "type": "f5anything",
+            "request": "launch",
+            "command": "make \n .\\project.exe",
+        }
+    ]
+}

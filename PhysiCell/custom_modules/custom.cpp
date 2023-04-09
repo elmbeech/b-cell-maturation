@@ -103,6 +103,13 @@ static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // ge
 size_t alphabetLength = sizeof(ALPHABET) / sizeof(ALPHABET[0]);
 std::vector<double> probabilities(alphabetLength, 1.0 / alphabetLength);
 
+bool DEBUG = false;
+
+template<typename... Args>
+void debug_print(Args... args) {
+    if (DEBUG == true)
+        printf(args...);
+}
 
 void create_cell_types( void )
 {
@@ -376,7 +383,7 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
 	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
 
         // print
-	printf("now I am a B_follicular cell!\n");
+	debug_print("now I am a B_follicular cell!\n");
         printSequence( antigenSequence.value, "Antigen: ");
         printSequence( antibodySequence.value, "Antibody: ");
 
@@ -395,10 +402,10 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
 
         // get alignment signal
         double hammscore = alignment ( antigenSequence,  antibodySequence , false);
-        printf("alignment hamming score: %g\n", hammscore);
+        debug_print("alignment hamming score: %g\n", hammscore);
 
 	// shodul I transform to a plasma or a memory B cell?
-	if ( hammscore > 0.98) {
+	if ( hammscore > 0.8) {
 	    printf("Yay, high hamming score, transform to B_plasma cell!\n");
 	    set_single_behavior( pCell, "transform to B_plasma", 9e9 );
             return;
@@ -412,7 +419,7 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
         double s1Pressure {100.0};
         // get the response functions
         double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
-        printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
+        debug_print("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
 
         // apoptosis response
         // get min rate value for apoptosis
@@ -431,7 +438,7 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
 	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
 
         set_single_behavior( pCell, "apoptosis" , rApoptosis );
-        printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
+        debug_print("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
 }
 
 
@@ -457,15 +464,15 @@ void create_bplasma_cell_type( void )  {
 
 // print antibody/antigen sequence
 void printSequence( std::vector<double>& sequence, std::string prefix = "sequence: " ) {
-    for (char element : prefix) printf("%c", element);
+    for (char element : prefix) debug_print("%c", element);
     for (double element : sequence) {
         if (element == PAD) {
-            printf("{%d}", (int)element);
+            debug_print("{%d}", (int)element);
         } else {
-            printf("{%c}", (int)element);
+            debug_print("{%c}", (int)element);
         }
     }
-    printf("\n");
+    debug_print("\n");
 }
 
 
@@ -571,26 +578,26 @@ double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySeque
     int i_padded = paddedSequence.size() - i_slide;
 
     for (size_t i=0; i <= i_padded; i++) {
-        if (verbose) printf("Sequence intersection: ***");
+        if (verbose) debug_print("Sequence intersection: ***");
         double i_hammdist = 0.0;
         for (size_t j=i; j < (i + i_slide); j++) {
             if (paddedSequence[j] == slideSequence[j-i]) {
                 i_hammdist = i_hammdist + 1.0;
             }
             if (verbose) {
-                if ((int) paddedSequence[j] == PAD) printf("{%d}", (int) paddedSequence[j]);
-                else printf("{%c}", (int) paddedSequence[j]);
+                if ((int) paddedSequence[j] == PAD) debug_print("{%d}", (int) paddedSequence[j]);
+                else debug_print("{%c}", (int) paddedSequence[j]);
             }
         }
         if (i_hammdist_max < i_hammdist) {
             i_hammdist_max = i_hammdist;
         }
-        if (verbose) printf("*** hamming distance: %g.\n", i_hammdist);
+        if (verbose) debug_print("*** hamming distance: %g.\n", i_hammdist);
     }
 
     // calcualte hamming distance score.
     if (i_slide < LEN_AMINOCOMPLETE) {
-        printf("Warning : LEN_AMINOCOMPLETE {%d} is greater than the smaller squence {%d}, hamming score can never reach 1!\n", (int) LEN_AMINOCOMPLETE, i_slide);
+        debug_print("Warning : LEN_AMINOCOMPLETE {%d} is greater than the smaller squence {%d}, hamming score can never reach 1!\n", (int) LEN_AMINOCOMPLETE, i_slide);
     }
 
     double r_hammscore = i_hammdist_max / LEN_AMINOCOMPLETE;
@@ -599,7 +606,7 @@ double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySeque
     }
 
     // output
-    if (verbose) printf("Sequence intersection: ***");
-        printf("hamming distance score: %g.\n", r_hammscore);
+    if (verbose) debug_print("Sequence intersection: ***");
+    debug_print("hamming distance score: %g.\n", r_hammscore);
     return(r_hammscore);
 }
