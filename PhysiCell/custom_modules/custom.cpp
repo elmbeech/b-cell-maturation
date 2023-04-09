@@ -70,7 +70,9 @@
 #include <time.h>
 #include <typeinfo>
 #include <vector>
+#include <fstream>
 
+#include "../modules/PhysiCell_various_outputs.h"
 #include "./custom.h"
 
 
@@ -82,6 +84,7 @@ Cell_Definition* bfollicular_cell;
 Cell_Definition* bplasma_cell;
 //Cell_Definition* antibody;  //TODO
 
+int num_plasma = 0;
 
 // custom constantes and variables
 
@@ -103,13 +106,21 @@ static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // ge
 size_t alphabetLength = sizeof(ALPHABET) / sizeof(ALPHABET[0]);
 std::vector<double> probabilities(alphabetLength, 1.0 / alphabetLength);
 
-bool DEBUG = false;
+static const bool DEBUG = false;
 
 template<typename... Args>
 void debug_print(Args... args) {
     if (DEBUG == true)
         printf(args...);
 }
+
+void run_every_timestep() {
+    // if (record_time_series_data() != 0) {
+    //     printf("WARNING: Failed to write with record_time_series_data().");
+    // }
+    record_time_series_data();
+}
+
 
 void create_cell_types( void )
 {
@@ -373,6 +384,15 @@ void create_bfollicular_cell_type( void )  {
 	bfollicular_cell->functions.update_phenotype = bfollicular_cell_phenotype;
 }
 
+void record_time_series_data() {
+    std::ofstream outfile;
+
+    // int num_plasma = all_cells->size(); //TODO(?) filter by plasma
+
+    outfile.open("num_plasma.txt", std::ios_base::app); // append instead of overwrite
+    outfile << num_plasma << "\n";
+}
+
 void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 
         // load antigen and anibody sequence
@@ -407,6 +427,7 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
 	// shodul I transform to a plasma or a memory B cell?
 	if ( hammscore > 0.8) {
 	    printf("Yay, high hamming score, transform to B_plasma cell!\n");
+        num_plasma += 1;
 	    set_single_behavior( pCell, "transform to B_plasma", 9e9 );
             return;
         }

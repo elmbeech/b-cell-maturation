@@ -188,6 +188,11 @@ void PhysiCell_Settings::read_from_pugixml( void )
 	enable_SVG_saves = xml_get_bool_value( node , "enable" ); 
 	node = node.parent(); 
 
+	node = xml_find_node( node , "custom_run" ); 
+	custom_run_interval = xml_get_double_value( node , "interval" );
+	enable_custom_run = xml_get_bool_value( node , "enable" ); 
+	node = node.parent(); 
+
 	node = xml_find_node( node , "intracellular_data" ); 
 	intracellular_save_interval = xml_get_double_value( node , "interval" );
 	enable_intracellular_saves = xml_get_bool_value( node , "enable" ); 

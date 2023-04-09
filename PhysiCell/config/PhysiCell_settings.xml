@@ -36,6 +36,10 @@
             <interval units="min">60</interval>
             <enable>true</enable>
         </SVG>
+        <custom_run>
+            <interval units="min">10</interval>
+            <enable>true</enable>
+        </custom_run>
         <legacy_data>
             <enable>false</enable>
         </legacy_data>

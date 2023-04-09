@@ -115,6 +115,9 @@ class PhysiCell_Settings
 	double SVG_save_interval = 60; 
 	bool enable_SVG_saves = true; 
 
+	double custom_run_interval = 10;
+	bool enable_custom_run = true;
+
 	double intracellular_save_interval = 60; 
 	bool enable_intracellular_saves = false; 
 	
@@ -130,6 +133,7 @@ class PhysiCell_Globals
 	double current_time = 0.0; 
 	double next_full_save_time = 0.0; 
 	double next_SVG_save_time = 0.0; 
+	double next_custom_run_time = 10.0;
 	double next_intracellular_save_time = 0.0; 
 	int full_output_index = 0; 
 	int SVG_output_index = 0; 

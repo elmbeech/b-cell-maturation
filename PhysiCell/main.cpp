@@ -210,6 +210,14 @@ int main( int argc, char* argv[] )
 					PhysiCell_globals.SVG_output_index++; 
 					PhysiCell_globals.next_SVG_save_time  += PhysiCell_settings.SVG_save_interval;
 				}
+				// printf("Time %f\n", PhysiCell_globals.next_SVG_save_time);
+			}
+
+			//custom logic
+			if( fabs( PhysiCell_globals.current_time - PhysiCell_globals.next_custom_run_time  ) < 0.01 * diffusion_dt )
+			{
+				run_every_timestep();
+				PhysiCell_globals.next_custom_run_time += PhysiCell_settings.custom_run_interval;
 			}
 
 			// update the microenvironment
