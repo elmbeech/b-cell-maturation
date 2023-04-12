@@ -65,6 +65,7 @@
 ###############################################################################
 */
 #include <cstdio>
+#include <cmath>
 #include <stdlib.h>
 #include <string>
 #include <time.h>
@@ -85,6 +86,7 @@ Cell_Definition* bplasma_cell;
 //Cell_Definition* antibody;  //TODO
 
 int num_plasma = 0;
+double num_invaders = 130;  //TODO make int
 
 // custom constantes and variables
 
@@ -94,10 +96,10 @@ static const double ALPHABET[] {'a','t','c','g'};  // oligo nucleotide alphabet
 static const double PAD = 0;
 
 // LEN_VECTOR_SEQUENCE >= max(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= min(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= LEN_AMINOCOMPLETE
-static const int LEN_VECTOR_SEQUENCE = 16;
-static const int LEN_ANTIBODY_SEQUENCE = 8;
-static const int LEN_ANTIGEN_SEQUENCE = 8;
-static const int LEN_AMINOCOMPLETE = 5;  // number of matching antigen antibody amino sequences that account for 100% affinity.
+static const int LEN_VECTOR_SEQUENCE = 4;
+static const int LEN_ANTIBODY_SEQUENCE = 2;
+static const int LEN_ANTIGEN_SEQUENCE = 2;
+static const int LEN_AMINOCOMPLETE = 2;  // number of matching antigen antibody amino sequences that account for 100% affinity.
 static const int MUTATION = 1;  // number antibody sequence mutations per follicular B cell division.
 static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.
 //static const std::vector<double> EMPTY_VECTOR {PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD};  // generate empty antigen antybody vector.
@@ -384,13 +386,45 @@ void create_bfollicular_cell_type( void )  {
 	bfollicular_cell->functions.update_phenotype = bfollicular_cell_phenotype;
 }
 
+
+double invader_birth_rate() {
+    return 1; //constant for now
+}
+
+double invader_death_rate() {
+    double num_to_kill = 10.0 / (1 + exp(-0.3 * (num_plasma - 8))); //arbitrary logistic function
+    // printf("num_to_kill %f\n", num_to_kill);
+    num_to_kill = floor(num_to_kill);
+
+    if (num_to_kill > num_invaders) {
+        num_to_kill = num_invaders;
+    }
+    return num_to_kill;
+}
+
+
+void invader_ode() {
+    // antibody_count += num_plasma * 2000; 
+
+    // double dt = PhysiCell_settings.custom_run_interval; //10.0; //TODO import from settings
+    // double b = invader_birth_rate();
+    // double d = invader_death_rate();
+    // double r = b-d;
+
+    // num_invaders = num_invaders / (1 - r * dt);
+    num_invaders += invader_birth_rate();
+    num_invaders -= invader_death_rate();
+}
+
 void record_time_series_data() {
     std::ofstream outfile;
 
-    // int num_plasma = all_cells->size(); //TODO(?) filter by plasma
+    invader_ode();
 
-    outfile.open("num_plasma.txt", std::ios_base::app); // append instead of overwrite
-    outfile << num_plasma << "\n";
+    outfile.open("../num_plasma3.txt", std::ios_base::app); // append instead of overwrite
+    outfile << num_plasma << "," << num_invaders << "\n";
+
+    // printf("Wrote %f, %f", num_plasma, num_invaders);
 }
 
 void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
