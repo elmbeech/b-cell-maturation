@@ -94,10 +94,10 @@ static const double ALPHABET[] {'a','t','c','g'};  // oligo nucleotide alphabet
 static const double PAD = 0;
 
 // LEN_VECTOR_SEQUENCE >= max(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= min(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= LEN_AMINOCOMPLETE
-static const int LEN_VECTOR_SEQUENCE = 6;
-static const int LEN_ANTIBODY_SEQUENCE = 3;
-static const int LEN_ANTIGEN_SEQUENCE = 3;
-static const int LEN_AMINOCOMPLETE = 3;  // number of matching antigen antibody amino sequences that account for 100% affinity.
+static const int LEN_VECTOR_SEQUENCE = 4;
+static const int LEN_ANTIBODY_SEQUENCE = 2;
+static const int LEN_ANTIGEN_SEQUENCE = 2;
+static const int LEN_AMINOCOMPLETE = 2;  // number of matching antigen antibody amino sequences that account for 100% affinity.
 static const int MUTATION = 1;  // number antibody sequence mutations per follicular B cell division.
 static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.
 //static const std::vector<double> EMPTY_VECTOR {PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD};  // generate empty antigen antybody vector.
@@ -298,7 +298,7 @@ void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	for (int i = 0; i < numTouching; i++) {
 		Cell* neighbor = pCell->state.neighbors[i];
 		if (neighbor->type_name == "B_naive") {
-			pCell->is_movable = false;
+			//pCell->is_movable = false;
 			pCell->attach_cell(neighbor);
 			//pCell->functions.update_phenotype = NULL;
                         // BUE 20230329: i think the phenotype function should be set in the create function?
@@ -392,7 +392,7 @@ void record_time_series_data() {
     //outfile2.open("num_invaders.txt", std::ios_base::app);
     //outfile2 << I << "\n";
     outfile.open("num_plasma.txt", std::ios_base::app); // append instead of overwrite
-    outfile << num_plasma << ","<< I << "\n";
+    outfile << num_plasma << ","<< round(I) << "\n";
     outfile.close();
     // outfile.open("num_invaders.txt", std::ios_base::app);
     //outfile << I << "\n";
@@ -492,9 +492,14 @@ double inv_br(double dt){//log(1000)/(60*dt*36)
 	//double bottom = (60*dt)*36;//1 and half timesteps...
 	//return(1);
 	//return (top/bottom);
-	double growth = 1.1;
-	double start = 1;
-	return (start * growth * dt);
+	
+	//double growth = 1;
+	//double start = 1i;
+	//double r = 
+	//start*(1+1.1)*exp(dt);
+//	double temp = start*(1+growth);
+	//double raise = pow(temp, dt);//exponential birth function 
+	return (.008);
 	
 }
 double inv_d(double dt){
@@ -502,15 +507,15 @@ double inv_d(double dt){
 	//double bottom = -(60*dt)*36; //or -36hours
 	//double bottom = -dt;
 	//double c = 1;
-	double num_invaders = 130.0;
-	double e = 10.0 / (1 + exp((-0.3)*(num_plasma-8)));
+	double e = 10.0 / (1 + exp((-0.3)*(num_plasma-18)));
 	e = floor(e);
 	//double bottom = c + e;
 	//double inv = (top/bottom);
-	if(e > num_invaders){
-		e = num_invaders;
-	}
+	//if(e > I){
+	//	e = I;
+	//}
 	return(e);
+	
 	//double maxD = (top/bottom);
 	//double halfmax = maxD/2;
 	//return (maxD + Hill_response_function(num_plasma, halfmax, 2));
@@ -520,17 +525,21 @@ double inv_d(double dt){
 double inv_ode(double dt){
 	double b = inv_br(dt);
 	double d = inv_d(dt);
-	double num_invaders = 130.0;
+	//double num_invaders = 130.0;
 	//printf("The birth rate is: %f\n", b);
         //printf("the death rate is: %f\n", d);	
-	num_invaders += inv_br(dt);
-	num_invaders -= inv_d(dt);
-	//double r = b-d;
-	//I = (I/1-r*dt);//saftey check for 0 (1-rdt)
+	//I += b;
+	//I -= d;
+	double r = b-d;//simple ODE invaders 
+	I = (I/(1-r*dt));//saftey check for 0 (1-rdt) logitic ODE for invaders 
+	if(I < 0){
+		I = 0;
+		return(I);
+	}
 	//std::ofstream outfile;
 	//outfile.open("num_invaders", std::ios_base::app);
 	//outfile << I << "\n";	
-	return(num_invaders);
+	return(I);
 }
 
 
