@@ -88,12 +88,12 @@ Cell_Definition* bplasma_cell;
 //Cell_Definition* antibody;  //TODO
 
 int num_plasma = 0;
-int num_invaders = 130;
+double num_invaders = 100;
+double last_num_invaders_before_doubling = num_invaders;
+double hoursElapsed = 0;
 
 // custom constantes and variables
-FILE* numPlasmaFile;
-char* lineToWrite = (char*) malloc(100);
-// std::ofstream numPlasmaFile;
+std::ofstream numPlasmaFile;
 
 //letters not in the human amino acid alphabet: b,j,o,u,x,z
 //static const double ALPHABET[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman amino acide alphabet
@@ -133,15 +133,13 @@ void open_out_file(void) {
         sprintf(outPath, "../num_plasma%d.txt", fileNum);
     } while (stat(outPath, &info ) == 0 );
 
-    numPlasmaFile = fopen(outPath, "w");
-    // numPlasmaFile.open(outPath);
+    numPlasmaFile.open(outPath);
     printf("Number of plasma cells will be written to file %s\n", outPath);
 }
 
 void final_cleanup(void) {
-    fclose(numPlasmaFile);
-    free(lineToWrite);
-    // numPlasmaFile.close();
+    numPlasmaFile.close();
+    printf("Closed numPlasmaFile successfully.\n");
 }
 
 
@@ -322,17 +320,12 @@ void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
 	for (int i = 0; i < numTouching; i++) {
 		Cell* neighbor = pCell->state.neighbors[i];
 		if (neighbor->type_name == "B_naive") {
-			pCell->is_movable = false;
-			pCell->attach_cell(neighbor);
-			//pCell->functions.update_phenotype = NULL;
-                        // BUE 20230329: i think the phenotype function should be set in the create function?
-
 			//Transfer antigen to B cell
 			int antigenIndex = neighbor->custom_data.find_vector_variable_index("antigenSequence");
 			neighbor->custom_data.vector_variables[antigenIndex].value = foreignAntigen;
 
-			// set_single_behavior(neighbor, "transform to B_follicular", 1e9); //FIXME
-                        // BUE 20230328: i tink the naive B cell should make its transfromation, not the Tf helper.
+            set_single_behavior(pCell, "apoptosis", 1e6);
+
 			return;
 		}
 	}
@@ -411,22 +404,30 @@ void create_bfollicular_cell_type( void )  {
 
 
 double invader_birth_rate() {
-    return 1; //constant for now
+    double out = last_num_invaders_before_doubling * pow(2, (hoursElapsed / 24.0));
+    if ((int)hoursElapsed % 24 == 0) {
+        last_num_invaders_before_doubling = out;
+        hoursElapsed = 0;
+    }
+    return out;
 }
 
 double invader_death_rate() {
-    double num_to_kill = 10.0 / (1 + exp(-0.3 * (num_plasma - 8))); //arbitrary logistic function
+    double num_to_kill = 100.0 / (1 + exp(-0.3 * (num_plasma - 16))); //arbitrary logistic function
     num_to_kill = floor(num_to_kill);
 
-    if (num_to_kill > num_invaders) {
-        num_to_kill = num_invaders;
-    }
+    // printf("Removing %f\n", num_to_kill);
     return num_to_kill;
 }
 
 
-void invader_ode() {
-    num_invaders += (int)(invader_birth_rate() - invader_death_rate());
+void invader_ode() {    
+    num_invaders = invader_birth_rate(); //NOTE: birth rate finds the new num_invaders instead of the number to add
+    num_invaders = num_invaders - invader_death_rate();
+
+    if (num_invaders < 0)
+        num_invaders = 0;
+    hoursElapsed += 2; //based on custom_run=120min in settings.xml
 }
 
 void record_time_series_data() {
@@ -434,16 +435,9 @@ void record_time_series_data() {
     invader_ode();
     
     // #pragma omp critical
-    // printf("About to write '%d,%d'\n",num_plasma, num_invaders); 
-    // #pragma omp critical
-    // numPlasmaFile << num_plasma << "," << num_invaders << "\n";
-    
+    printf("About to write '%d,%f'\n",num_plasma, num_invaders); 
     #pragma omp critical
-    sprintf(lineToWrite, "%d,%d\n", num_plasma, num_invaders);
-    #pragma omp critical
-    printf("About to write %s\n",lineToWrite); 
-    #pragma omp critical
-    fputs(lineToWrite, numPlasmaFile);
+    numPlasmaFile << num_plasma << "," << num_invaders << "\n";
 }
 
 void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
@@ -474,7 +468,7 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
     }
 
         // get alignment signal
-        double hammscore = 0.42; //alignment ( antigenSequence,  antibodySequence , false);
+        double hammscore = alignment(antigenSequence, antibodySequence, false);
         debug_print("alignment hamming score: %g\n", hammscore);
 
 	// shodul I transform to a plasma or a memory B cell?

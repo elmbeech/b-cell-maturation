@@ -34,10 +34,10 @@
         </full_data>
         <SVG>
             <interval units="min">60</interval>
-            <enable>true</enable>
+            <enable>false</enable>
         </SVG>
         <custom_run>
-            <interval units="min">10</interval>
+            <interval units="min">120</interval>
             <enable>true</enable>
         </custom_run>
         <legacy_data>

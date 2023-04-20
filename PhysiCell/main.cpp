@@ -243,6 +243,8 @@ int main( int argc, char* argv[] )
 	{ // reference to the base of a polymorphic object
 		std::cout << e.what(); // information from length_error printed
 	}
+
+	final_cleanup();
 	
 	// save a final simulation snapshot 
 	
