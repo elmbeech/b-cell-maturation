@@ -1075,7 +1075,8 @@ void Cell::convert_to_cell_definition( Cell_Definition& cd )
 	type = cd.type; 
 	type_name = cd.name; 
 	
-	custom_data = cd.custom_data; 
+	// BUE 20130328: commented out to preserve custom variabel content in transition.
+        //custom_data = cd.custom_data;
 	parameters = cd.parameters; 
 	functions = cd.functions; 
 	
