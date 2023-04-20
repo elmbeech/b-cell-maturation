@@ -110,5 +110,5 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
 std::vector<double> get_vector_variable( Cell* pCell, std::string name );
 void printSequence( std::vector<double>& sequence, std::string prefix );
 std::vector<double> generateSequence( int lenSequence );
-void mutateSequence( std::vector<double>& sequence, int mutations );
+void mutateSequence( std::vector<double>& sequence);
 double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence, bool verbose);

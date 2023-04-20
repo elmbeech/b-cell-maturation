@@ -91,13 +91,18 @@ static const double ALPHABET[] {'a','t','c','g'};  // oligo nucleotide alphabet
 static const double PAD = 0;
 
 // LEN_VECTOR_SEQUENCE >= max(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= min(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= LEN_AMINOCOMPLETE
-static const int LEN_VECTOR_SEQUENCE = 16;
-static const int LEN_ANTIBODY_SEQUENCE = 8;
-static const int LEN_ANTIGEN_SEQUENCE = 8;
-static const int LEN_AMINOCOMPLETE = 5;  // number of matching antigen antibody amino sequences that account for 100% affinity.
-static const int MUTATION = 1;  // number antibody sequence mutations per follicular B cell division.
+static const int LEN_VECTOR_SEQUENCE = 24;
+static const int LEN_ANTIBODY_SEQUENCE = 24;
+static const int LEN_ANTIGEN_SEQUENCE = 24;
+static const int LEN_AMINOCOMPLETE = 16;  // number of matching antigen antibody amino sequences that account for 100% affinity.
+static const double MUTATION_PER_SEQUENCE = 5.0;  // number antibody sequence mutations per follicular B cell division.
+static const double MUTATION_CHANCE = 0.5;  // about every daugther cell mutates.
 static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.
-//static const std::vector<double> EMPTY_VECTOR {PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD};  // generate empty antigen antybody vector.
+
+// gereate sequence manual
+//static const std::vector<double> EMPTY_VECTOR {PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD};
+//static const std::vector<double> AGENSEQ_VECTOR {'a','t','c','g','a','a','t','t','c','c','g','g','a','t','c','g'};
+
 
 // specify equal probabilities to choose from ALPHABET with choose_event
 size_t alphabetLength = sizeof(ALPHABET) / sizeof(ALPHABET[0]);
@@ -106,135 +111,135 @@ std::vector<double> probabilities(alphabetLength, 1.0 / alphabetLength);
 
 void create_cell_types( void )
 {
-	// set the random seed
-	SeedRandom( parameters.ints("random_seed") );
+    // set the random seed
+    SeedRandom( parameters.ints("random_seed") );
 
-	/*
-	   Put any modifications to default cell definition here if you
-	   want to have "inherited" by other cell types.
+    /*
+       Put any modifications to default cell definition here if you
+       want to have "inherited" by other cell types.
 
-	   This is a good place to set default functions.
-	*/
+       This is a good place to set default functions.
+    */
 
-	initialize_default_cell_definition();
-	cell_defaults.phenotype.secretion.sync_to_microenvironment( &microenvironment );
+    initialize_default_cell_definition();
+    cell_defaults.phenotype.secretion.sync_to_microenvironment( &microenvironment );
 
-	cell_defaults.functions.volume_update_function = standard_volume_update_function;
-	cell_defaults.functions.update_velocity = standard_update_cell_velocity;
+    cell_defaults.functions.volume_update_function = standard_volume_update_function;
+    cell_defaults.functions.update_velocity = standard_update_cell_velocity;
 
-	cell_defaults.functions.update_migration_bias = NULL;
-	cell_defaults.functions.update_phenotype = NULL; // update_cell_and_death_parameters_O2_based;
-	cell_defaults.functions.custom_cell_rule = NULL;
-	cell_defaults.functions.contact_function = NULL;
+    cell_defaults.functions.update_migration_bias = NULL;
+    cell_defaults.functions.update_phenotype = NULL; // update_cell_and_death_parameters_O2_based;
+    cell_defaults.functions.custom_cell_rule = NULL;
+    cell_defaults.functions.contact_function = NULL;
 
-	cell_defaults.functions.add_cell_basement_membrane_interactions = NULL;
-	cell_defaults.functions.calculate_distance_to_membrane = NULL;
+    cell_defaults.functions.add_cell_basement_membrane_interactions = NULL;
+    cell_defaults.functions.calculate_distance_to_membrane = NULL;
 
-	/*
-	   This parses the cell definitions in the XML config file.
-	*/
+    /*
+       This parses the cell definitions in the XML config file.
+    */
 
-	initialize_cell_definitions_from_pugixml();
+    initialize_cell_definitions_from_pugixml();
 
-	/*
-	   This builds the map of cell definitions and summarizes the setup.
-	*/
+    /*
+       This builds the map of cell definitions and summarizes the setup.
+    */
 
-	build_cell_definitions_maps();
+    build_cell_definitions_maps();
 
-	/*
-	   This intializes cell signal and response dictionaries
-	*/
+    /*
+       This intializes cell signal and response dictionaries
+    */
 
-	setup_signal_behavior_dictionaries();
+    setup_signal_behavior_dictionaries();
 
-	/*
-	   Put any modifications to individual cell definitions here.
+    /*
+       Put any modifications to individual cell definitions here.
 
-	   This is a good place to set custom functions.
-	*/
+       This is a good place to set custom functions.
+    */
 
-	cell_defaults.functions.update_phenotype = phenotype_function;
-	cell_defaults.functions.custom_cell_rule = custom_function;
-	cell_defaults.functions.contact_function = contact_function;
+    cell_defaults.functions.update_phenotype = phenotype_function;
+    cell_defaults.functions.custom_cell_rule = custom_function;
+    cell_defaults.functions.contact_function = contact_function;
 
-	//create_invader_type();   // TODO
-	create_tfhelper_cell_type();
-        create_bnaive_cell_type();
-        create_bfollicular_cell_type();
-        //create_bmemory_cell_type();  // TODO
-        create_bplasma_cell_type();
-	//create_antibody_type();  // TODO
+    //create_invader_type();   // TODO
+    create_tfhelper_cell_type();
+    create_bnaive_cell_type();
+    create_bfollicular_cell_type();
+    //create_bmemory_cell_type();  // TODO
+    create_bplasma_cell_type();
+    //create_antibody_type();  // TODO
 
-	/*
-	   This builds the map of cell definitions and summarizes the setup.
-	*/
+    /*
+       This builds the map of cell definitions and summarizes the setup.
+    */
 
-	display_cell_definitions( std::cout );
+    display_cell_definitions( std::cout );
 
-	return;
+    return;
 }
 
 void setup_microenvironment( void )
 {
-	// set domain parameters
+    // set domain parameters
 
-	// put any custom code to set non-homogeneous initial conditions or
-	// extra Dirichlet nodes here.
-  	srand(time(NULL));
+    // put any custom code to set non-homogeneous initial conditions or
+    // extra Dirichlet nodes here.
+      srand(time(NULL));
 
-	// initialize BioFVM
+    // initialize BioFVM
 
-	initialize_microenvironment();
+    initialize_microenvironment();
 
-	return;
+    return;
 }
 
 void setup_tissue( void )
 {
-	double Xmin = microenvironment.mesh.bounding_box[0];
-	double Ymin = microenvironment.mesh.bounding_box[1];
-	double Zmin = microenvironment.mesh.bounding_box[2];
+    double Xmin = microenvironment.mesh.bounding_box[0];
+    double Ymin = microenvironment.mesh.bounding_box[1];
+    double Zmin = microenvironment.mesh.bounding_box[2];
 
-	double Xmax = microenvironment.mesh.bounding_box[3];
-	double Ymax = microenvironment.mesh.bounding_box[4];
-	double Zmax = microenvironment.mesh.bounding_box[5];
+    double Xmax = microenvironment.mesh.bounding_box[3];
+    double Ymax = microenvironment.mesh.bounding_box[4];
+    double Zmax = microenvironment.mesh.bounding_box[5];
 
-	if( default_microenvironment_options.simulate_2D == true )
-	{
-		Zmin = 0.0;
-		Zmax = 0.0;
-	}
+    if( default_microenvironment_options.simulate_2D == true )
+    {
+        Zmin = 0.0;
+        Zmax = 0.0;
+    }
 
-	double Xrange = Xmax - Xmin;
-	double Yrange = Ymax - Ymin;
-	double Zrange = Zmax - Zmin;
+    double Xrange = Xmax - Xmin;
+    double Yrange = Ymax - Ymin;
+    double Zrange = Zmax - Zmin;
 
-	// create some of each type of cell
+    // create some of each type of cell
 
-	Cell* pC;
+    Cell* pC;
 
-	for( int k=0; k < cell_definitions_by_index.size() ; k++ )
-	{
-		Cell_Definition* pCD = cell_definitions_by_index[k];
-		std::cout << "Placing cells of type " << pCD->name << " ... " << std::endl;
-		for( int n = 0 ; n < parameters.ints("number_of_cells") ; n++ )
-		{
-			std::vector<double> position = {0,0,0};
-			position[0] = Xmin + UniformRandom()*Xrange;
-			position[1] = Ymin + UniformRandom()*Yrange;
-			position[2] = Zmin + UniformRandom()*Zrange;
+    for( int k=0; k < cell_definitions_by_index.size() ; k++ )
+    {
+        Cell_Definition* pCD = cell_definitions_by_index[k];
+        std::cout << "Placing cells of type " << pCD->name << " ... " << std::endl;
+        for( int n = 0 ; n < parameters.ints("number_of_cells") ; n++ )
+        {
+            std::vector<double> position = {0,0,0};
+            position[0] = Xmin + UniformRandom()*Xrange;
+            position[1] = Ymin + UniformRandom()*Yrange;
+            position[2] = Zmin + UniformRandom()*Zrange;
 
-			pC = create_cell( *pCD );
-			pC->assign_position( position );
-		}
-	}
-	std::cout << std::endl;
+            pC = create_cell( *pCD );
+            pC->assign_position( position );
+        }
+    }
+    std::cout << std::endl;
 
-	// load cells from your CSV file (if enabled)
-	load_cells_from_pugixml();
+    // load cells from your CSV file (if enabled)
+    load_cells_from_pugixml();
 
-	return;
+    return;
 }
 
 std::vector<std::string> my_coloring_function( Cell* pCell )
@@ -260,197 +265,224 @@ std::vector<double> get_vector_variable( Cell* pCell, std::string name ) {
 
 
 // follicular T helper cell
-void create_tfhelper_cell_type( void )  {
-	tfhelper_cell = find_cell_definition( "Tf_helper" );
+void create_tfhelper_cell_type(void)  {
+    tfhelper_cell = find_cell_definition("Tf_helper");
 
-	std::vector<double> antigenSequence = generateSequence( LEN_ANTIGEN_SEQUENCE );
-	tfhelper_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+    std::vector<double> antigenSequence = generateSequence(LEN_ANTIGEN_SEQUENCE);
+    tfhelper_cell->custom_data.add_vector_variable("antigenSequence", antigenSequence);
 
-	std::vector<double> antibodySequence = EMPTY_VECTOR;
-	tfhelper_cell->custom_data.add_vector_variable( "antibodySequence", antibodySequence);
+    std::vector<double> antibodySequence = EMPTY_VECTOR;
+    tfhelper_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
 
-	tfhelper_cell->functions.update_phenotype = tfhelper_cell_phenotype;
+    // custom variables
+    tfhelper_cell->custom_data.add_variable("mutate", -1.0);
+
+    tfhelper_cell->functions.update_phenotype = tfhelper_cell_phenotype;
 }
 
-void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
-	std::vector<double> foreignAntigen = get_vector_variable(pCell, "antigenSequence");
+void tfhelper_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
+    std::vector<double> foreignAntigen = get_vector_variable(pCell, "antigenSequence");
+    //int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
+    //Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
 
-	int numTouching = pCell->state.neighbors.size();
-	for (int i = 0; i < numTouching; i++) {
-		Cell* neighbor = pCell->state.neighbors[i];
-		if (neighbor->type_name == "B_naive") {
-			pCell->is_movable = false;
-			pCell->attach_cell(neighbor);
-			//pCell->functions.update_phenotype = NULL;
-                        // BUE 20230329: i think the phenotype function should be set in the create function?
+    int numTouching = pCell->state.neighbors.size();
+    for (int i = 0; i < numTouching; i++) {
+        Cell* neighbor = pCell->state.neighbors[i];
+        if (neighbor->type_name == "B_naive") {
+            // manipulate Tf helper cell
+            //pCell->attach_cell(neighbor);
+            //pCell->is_movable = false;
+            //pCell->functions.update_phenotype = NULL;
+            //neighbor->is_movable = false;
+            //transfer antigen to B cell
+            int antigenIndex = neighbor->custom_data.find_vector_variable_index("antigenSequence");
+            neighbor->custom_data.vector_variables[antigenIndex].value = foreignAntigen;
+            // break out of the for loop
+            set_single_behavior(pCell, "apoptosis", 9e9);
+            break;
+        }
+    }
 
-			//Transfer antigen to B cell
-			int antigenIndex = neighbor->custom_data.find_vector_variable_index("antigenSequence");
-			neighbor->custom_data.vector_variables[antigenIndex].value = foreignAntigen;
+    // increase migration bias in higher quorum factor
+    double q = get_single_signal( pCell, "Quorum_factor");
+    double b0 = get_single_base_behavior( pCell, "migration bias");
+    double bM = 1;
+    double b = b0 + (bM-b0)*linear_response_function( q , 0 , 1 );
+    set_single_behavior( pCell , "migration bias" , b );
 
-			// set_single_behavior(neighbor, "transform to B_follicular", 1e9); //FIXME
-                        // BUE 20230328: i tink the naive B cell should make its transfromation, not the Tf helper.
-			return;
-		}
-	}
-
-	// increase migration bias in higher quorum factor
-	double q = get_single_signal( pCell, "Quorum_factor");
-	double b0 = get_single_base_behavior( pCell, "migration bias");
-	double bM = 1;
-	double b = b0 + (bM-b0)*linear_response_function( q , 0 , 1 );
-	set_single_behavior( pCell , "migration bias" , b );
-
-	// reduce migration speed in higher quorum factor
-	// double s0 = get_single_base_behavior( pCell, "migration speed");
-	// double sM = 0.1*s0;
-	// double s = s0 + (sM-s0)*decreasing_linear_response_function( q , 0.5, 0.75 );
-	// set_single_behavior( pCell , "migration speed" , s );
+    // reduce migration speed in higher quorum factor
+    //double s0 = get_single_base_behavior( pCell, "migration speed");
+    //double sM = 0.1*s0;
+    //double s = s0 + (sM-s0)*decreasing_linear_response_function( q , 0.5, 0.75 );
+    //set_single_behavior( pCell , "migration speed" , s );
 }
+
 
 // naive B cell
-void create_bnaive_cell_type( void )  {
-        // from xml
-	bnaive_cell = find_cell_definition( "B_naive" );
+void create_bnaive_cell_type(void)  {
+    // from xml
+    bnaive_cell = find_cell_definition("B_naive");
 
-        // antigen variablae
-	std::vector<double> antigenSequence = EMPTY_VECTOR;
-	bnaive_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+    // antigen variablae
+    std::vector<double> antigenSequence = EMPTY_VECTOR;
+    bnaive_cell->custom_data.add_vector_variable("antigenSequence", antigenSequence);
 
-        // antibody variable
-	std::vector<double> antibodySequence = EMPTY_VECTOR;
-	bnaive_cell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+    // antibody variable
+    std::vector<double> antibodySequence = EMPTY_VECTOR;
+    bnaive_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
 
-	// update phenotype
-	bnaive_cell->functions.update_phenotype = bnaive_cell_phenotype;
+    // custom variables
+    bnaive_cell->custom_data.add_variable("mutate", -1.0);
+
+    // update phenotype
+    bnaive_cell->functions.update_phenotype = bnaive_cell_phenotype;
 }
 
-void bnaive_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
+void bnaive_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
 
-        // antigen sequence
-	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
-	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
+    // antigen sequence
+    int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
+    Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
 
-	// shodul I transform to follicular B cell?
-	if ( antigenSequence.value != EMPTY_VECTOR ) {
-            // antibody sequence
-	    int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
-            pCell->custom_data.vector_variables[antibodyIndex].value = generateSequence(LEN_ANTIBODY_SEQUENCE);
+    // shodul I transform to follicular B cell?
+    if (antigenSequence.value != EMPTY_VECTOR) {
+        // antibody sequence
+        int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
+        pCell->custom_data.vector_variables[antibodyIndex].value = generateSequence(LEN_ANTIBODY_SEQUENCE);
 
-            // phenotype
-	    set_single_behavior(pCell, "transform to B_follicular", 9e9);
+        // phenotype
+        set_single_behavior(pCell, "transform to B_follicular", 9e9);
 
-            // print
-	    printf("\nYay, got antigen, transform to B_follicular cell!\n");
-            printSequence(antigenSequence.value, "Antigen: ");
-            Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
-            printSequence(antibodySequence.value, "Antibody: ");
-        }
+        // print
+        printf("\nCell ID %d: Yay, got antigen, transform to B_follicular cell!\n", pCell->ID);
+        printSequence(antigenSequence.value, "Antigen: ");
+        Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
+        printSequence(antibodySequence.value, "Antibody: ");
+    }
 }
 
 
 // follicular B cell
-void create_bfollicular_cell_type( void )  {
-        // from xml
-	bfollicular_cell = find_cell_definition( "B_follicular" );
+void create_bfollicular_cell_type(void)  {
+    // from xml
+    bfollicular_cell = find_cell_definition("B_follicular");
 
-        // antigen variablae
-	std::vector<double> antigenSequence = EMPTY_VECTOR;
-	bfollicular_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+    // antigen variablae
+    std::vector<double> antigenSequence = EMPTY_VECTOR;
+    bfollicular_cell->custom_data.add_vector_variable("antigenSequence", antigenSequence);
 
-        // antibody variable
-	std::vector<double> antibodySequence = EMPTY_VECTOR;
-	bfollicular_cell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+    // antibody variable
+    std::vector<double> antibodySequence = EMPTY_VECTOR;
+    bfollicular_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
 
-	// update phenotype
-	bfollicular_cell->functions.update_phenotype = bfollicular_cell_phenotype;
+    // custom variables
+    bfollicular_cell->custom_data.add_variable("mutate", -1.0);
+    bfollicular_cell->custom_data.add_variable("hamming_fact", 0.0);
+    bfollicular_cell->custom_data.add_variable("pressure_fact", 0.0);
+    bfollicular_cell->custom_data.add_variable("apoptosis_fact", 0.0);
+    // update phenotype
+    bfollicular_cell->functions.update_phenotype = bfollicular_cell_phenotype;
 }
 
-void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
+void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
+    // if cell not in apoptosis mode
+    if (get_single_signal(pCell, "dead") < 0.5) {
 
         // load antigen and anibody sequence
-	int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
-	Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
+        int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
+        Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
 
-	int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
-	Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
+        int antibodyIndex = pCell->custom_data.find_vector_variable_index("antibodySequence");
+        Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
 
-        // print
-	printf("now I am a B_follicular cell!\n");
-        printSequence( antigenSequence.value, "Antigen: ");
-        printSequence( antibodySequence.value, "Antibody: ");
-
-	// mutate inherited antibody sequnece, but only by cell dividion and only one offspring cell!
-    double mutationChance = 0.5;
-    // If cell divided less than 6 minutes ago
-    if (phenotype.cycle.data.elapsed_time_in_phase < 6.0f){
-        // 50% chance to mutate sequence
-        std::vector<double> mutateProbability = {1-mutationChance, mutationChance};
-        if(choose_event(mutateProbability)) {
-            mutateSequence( antibodySequence.value, MUTATION );
-            pCell->custom_data.vector_variables[antibodyIndex].value = antibodySequence.value;
-            printSequence( antibodySequence.value, "Mutated : ");
+        // check for cell cycle time and if divided less than 1[h] ago and possibly mutate
+        double generationTime = phenotype.cycle.data.elapsed_time_in_phase;
+        if (generationTime < 60.0) {  // elapsed_time_in_phase is in [min]
+            if (pCell->custom_data["mutate"]  < -0.5) {
+                printf("Cell ID %d: just divided, %g[min] ago.\n", pCell->ID, generationTime);
+                std::vector<double> flip {1 - MUTATION_CHANCE, MUTATION_CHANCE};
+                int choice = choose_event(flip);
+                if (choice == 0) { pCell->custom_data["mutate"]  = 0.0; }
+                else { pCell->custom_data["mutate"] = MUTATION_PER_SEQUENCE; }
+            }
+            printf("Cell ID %d: mutation to go: %d\n", pCell->ID, (int)pCell->custom_data["mutate"]);
+            if (pCell->custom_data["mutate"] > 0.5) {
+                printSequence(antigenSequence.value, "Antigen: ");
+                printSequence(antibodySequence.value, "Antibody: ");
+                mutateSequence(antibodySequence.value);
+                pCell->custom_data.vector_variables[antibodyIndex].value = antibodySequence.value;
+                printSequence(antibodySequence.value, "Mutated : ");
+                pCell->custom_data["mutate"] = pCell->custom_data["mutate"] - 1.0;
+            }
+            else {
+                printSequence(antigenSequence.value, "Antigen: ");
+                printSequence(antibodySequence.value, "Antibody: ");
+                printf("No mutation!\n");
+            }
         }
-    }
+        else {
+            pCell->custom_data["mutate"] = -1.0;
+        }
 
         // get alignment signal
-        double hammscore = alignment ( antigenSequence,  antibodySequence , false);
-        printf("alignment hamming score: %g\n", hammscore);
+        double fracHamming = alignment(antigenSequence, antibodySequence, false);
+        //int hammingIndex = pCell->custom_data.find_variable_index("hamming");
+        //pCell->custom_data.variables[hammingIndex].value = hammscore;
+        pCell->custom_data["hamming_fract"] = fracHamming;
 
-	// shodul I transform to a plasma or a memory B cell?
-	if ( hammscore > 0.98) {
-	    printf("Yay, high hamming score, transform to B_plasma cell!\n");
-	    set_single_behavior( pCell, "transform to B_plasma", 9e9 );
-            return;
+        // get apoptosis signal
+        //double apoptosis = get_single_signal(pCell, "apoptosis");  // is this already output??
+
+        // should I transform to a plasma or a memory B cell?
+        if (fracHamming > 0.9) {
+            printf("Yay, high hamming score, transform to B_plasma cell!\n");
+            set_single_behavior(pCell, "transform to B_plasma", 9e9);
         }
+        else {
+            // get pressure signal
+            double pressure = get_single_signal(pCell, "pressure");
+            // get pressure respons
+            double s0Pressure {0.0};  // min pressure
+            double s1Pressure {10.0};  // max pressure evaluated by measurement
+            double fracPressure = linear_response_function(pressure, s0Pressure, s1Pressure);  // value between 0 and 1
+            pCell->custom_data["pressure_fact"] = fracPressure;
 
-        // get pressure signal
-        double pressure = get_single_signal(pCell , "pressure");
-        // min pressure will be 0 [?]
-        // max pressure - I have no idea. pragmatically set to 10. [?]
-        double s0Pressure {0.0};
-        double s1Pressure {100.0};
-        // get the response functions
-        double rPressure = linear_response_function( pressure, s0Pressure, s1Pressure);
-        printf("pressure min: {%g}\tmax: {%g}\tdetected: {%g}\tresponse_fraction:{%g} \n", s0Pressure, s1Pressure, pressure, rPressure);
+            // set appoptosis rate
+            // default min rate value for apoptosis is 5.31667e-05 [1/min]
+            // this means the probabiliry to die in a 60 min time setp is 60[min] * 5.31667e-05[1/min] = 0.003190002 (~ 3 per mille)
+            double s0Apoptosis = get_single_base_behavior(pCell, "apoptosis" );  // min pressure
+            double s1Apoptosis = 0.98 / 60;  // we specify, at max 98% of the cells should enter apoptosis within 60 [1/min], this specifies the steepness
+            //double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
+            //double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure - fracHamming) / 2;
+            double fracApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * fracPressure * (1 - fracHamming);
+            set_single_behavior(pCell, "apoptosis" , fracApoptosis);
 
-        // apoptosis response
-        // get min rate value for apoptosis
-        // the default rate is 5.31667e-05
-        // this means the probability to die in a 6 min time step is 6[min] * 5.31667e-05[1/min] = 0.0003190002
-        // this means the probabiliry to die in a 60 min time setp is 6[min] * 5.31667e-05[1/min] = 0.003190002 (~ 3 per mille)
-        double s0Apoptosis = get_single_base_behavior( pCell, "apoptosis" );
-        // get max rate value for apoptosis
-        // let's say, at max pressure 98% of the cells should enter apoptosis within 60 [1/min]
-        // 60[min] * rM[1/min] = 1
-        double s1Apoptosis = 0.98 / 60;
-
-        // bue 20130322: getting the complete formula adjusted will need some analysis.
-	// rule of pressure and alignment score to steer apoptosis rate
-	//double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure + (1 - hammscore)) / 2;
-	double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
-
-        set_single_behavior( pCell, "apoptosis" , rApoptosis );
-        printf("apoptosis min: {%g}\tmax: {%g}\tset: {%g}\n", s0Apoptosis, s1Apoptosis, rApoptosis);
+            // output
+            pCell->custom_data["apoptosis_fact"] = fracApoptosis;
+        }
+    }
 }
 
 
 // plasma B cell
 void create_bplasma_cell_type( void )  {
-        // from xml
-	bplasma_cell = find_cell_definition( "B_plasma" );
+    // from xml
+    bplasma_cell = find_cell_definition("B_plasma");
 
-        // antigen variablae
-	std::vector<double> antigenSequence = EMPTY_VECTOR;
-	bplasma_cell->custom_data.add_vector_variable( "antigenSequence", antigenSequence );
+    // antigen variablae
+    std::vector<double> antigenSequence = EMPTY_VECTOR;
+    bplasma_cell->custom_data.add_vector_variable("antigenSequence", antigenSequence);
 
-        // antibody variable
-	std::vector<double> antibodySequence = EMPTY_VECTOR;
-	bplasma_cell->custom_data.add_vector_variable( "antibodySequence", antibodySequence );
+    // antibody variable
+    std::vector<double> antibodySequence = EMPTY_VECTOR;
+    bplasma_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
 
-	// update phenotype
-	bplasma_cell->functions.update_phenotype = NULL;
-	//bplasma_cell->functions.update_phenotype = bplasma_cell_phenotype;  // TODO
+    // custom variables
+    bplasma_cell->custom_data.add_variable("mutate", -1.0);
+
+    // update phenotype
+    bplasma_cell->functions.update_phenotype = NULL;
+    //bplasma_cell->functions.update_phenotype = bplasma_cell_phenotype;  // TODO
 }
 
 
@@ -470,7 +502,7 @@ void printSequence( std::vector<double>& sequence, std::string prefix = "sequenc
 
 
 // generate antibody/antigen sequence given actual length of coding sequence, and length of vector
-std::vector<double> generateSequence( int lenSequence ) {
+std::vector<double> generateSequence(int lenSequence) {
     int lenPad = LEN_VECTOR_SEQUENCE - lenSequence;
     std::vector<double> sequence;
     for (size_t i = 0; i < lenSequence; ++i) {
@@ -484,10 +516,8 @@ std::vector<double> generateSequence( int lenSequence ) {
 }
 
 
-// Mutate antibody/antigen sequence given sequence and number of mutations (doesn't affect padding)
-// This function can mutate the same letter twice, which can be fixed by changing mutateProbabilities after each mutation
-// May change if necessary
-void mutateSequence( std::vector<double>& sequence, int mutations ) {
+// Mutate antibody/antigen sequence at one random non pad character position.
+void mutateSequence(std::vector<double>& sequence) {
     // Find length of actual sequence without padding
     size_t sequenceLength = 0;
     for (const auto& value : sequence) {
@@ -497,19 +527,15 @@ void mutateSequence( std::vector<double>& sequence, int mutations ) {
             break;
         }
     }
-
     // Create equal probability vector to choose from the sequence
-    std::vector<double> mutateProbabilities( sequenceLength, 1.0 / sequenceLength );
-
+    std::vector<double> mutateProbabilities(sequenceLength, 1.0 / sequenceLength);
     // Mutate the sequence
-    for (size_t i = 0; i < mutations; ++i) {
-        sequence[choose_event(mutateProbabilities)] = ALPHABET[choose_event(probabilities)];
-    }
+    sequence[choose_event(mutateProbabilities)] = ALPHABET[choose_event(probabilities)];
 }
 
 
 // qunatify hamming distance from to antigen antibody sequences of variable size.
-double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence , bool verbose = false) {
+double alignment(Vector_Variable antigenSequence, Vector_Variable antibodySequence , bool verbose = false) {
 
     // strip input
     std::vector<double> antigenCode {};
@@ -600,6 +626,6 @@ double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySeque
 
     // output
     if (verbose) printf("Sequence intersection: ***");
-        printf("hamming distance score: %g.\n", r_hammscore);
+    //printf("hamming distance score: %g.\n", r_hammscore);
     return(r_hammscore);
 }
