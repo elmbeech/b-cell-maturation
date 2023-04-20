@@ -68,6 +68,8 @@
 #include "../core/PhysiCell.h"
 #include "../modules/PhysiCell_standard_modules.h"
 
+#include <cstdio>
+
 using namespace BioFVM;
 using namespace PhysiCell;
 
@@ -118,3 +120,5 @@ void printSequence( std::vector<double>& sequence, std::string prefix );
 std::vector<double> generateSequence( int lenSequence );
 void mutateSequence( std::vector<double>& sequence, int mutations );
 double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence, bool verbose);
+
+void final_cleanup(void);

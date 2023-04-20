@@ -72,6 +72,8 @@
 #include <typeinfo>
 #include <vector>
 #include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "../modules/PhysiCell_various_outputs.h"
 #include "./custom.h"
@@ -86,9 +88,12 @@ Cell_Definition* bplasma_cell;
 //Cell_Definition* antibody;  //TODO
 
 int num_plasma = 0;
-double num_invaders = 130;  //TODO make int
+int num_invaders = 130;
 
 // custom constantes and variables
+FILE* numPlasmaFile;
+char* lineToWrite = (char*) malloc(100);
+// std::ofstream numPlasmaFile;
 
 //letters not in the human amino acid alphabet: b,j,o,u,x,z
 //static const double ALPHABET[] {'a','c','d','e','f','g','h','i','k','l','m','n','p','q','r','s','t','v','w','y'};  // humman amino acide alphabet
@@ -102,7 +107,6 @@ static const int LEN_ANTIGEN_SEQUENCE = 2;
 static const int LEN_AMINOCOMPLETE = 2;  // number of matching antigen antibody amino sequences that account for 100% affinity.
 static const int MUTATION = 1;  // number antibody sequence mutations per follicular B cell division.
 static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.
-//static const std::vector<double> EMPTY_VECTOR {PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD};  // generate empty antigen antybody vector.
 
 // specify equal probabilities to choose from ALPHABET with choose_event
 size_t alphabetLength = sizeof(ALPHABET) / sizeof(ALPHABET[0]);
@@ -117,10 +121,27 @@ void debug_print(Args... args) {
 }
 
 void run_every_timestep() {
-    // if (record_time_series_data() != 0) {
-    //     printf("WARNING: Failed to write with record_time_series_data().");
-    // }
     record_time_series_data();
+}
+
+void open_out_file(void) {
+    struct stat info;
+    int fileNum = 0;
+    char* outPath = (char*) malloc(20);
+    do {
+        fileNum += 1;
+        sprintf(outPath, "../num_plasma%d.txt", fileNum);
+    } while (stat(outPath, &info ) == 0 );
+
+    numPlasmaFile = fopen(outPath, "w");
+    // numPlasmaFile.open(outPath);
+    printf("Number of plasma cells will be written to file %s\n", outPath);
+}
+
+void final_cleanup(void) {
+    fclose(numPlasmaFile);
+    free(lineToWrite);
+    // numPlasmaFile.close();
 }
 
 
@@ -191,6 +212,8 @@ void create_cell_types( void )
 	*/
 
 	display_cell_definitions( std::cout );
+
+    open_out_file();
 
 	return;
 }
@@ -393,7 +416,6 @@ double invader_birth_rate() {
 
 double invader_death_rate() {
     double num_to_kill = 10.0 / (1 + exp(-0.3 * (num_plasma - 8))); //arbitrary logistic function
-    // printf("num_to_kill %f\n", num_to_kill);
     num_to_kill = floor(num_to_kill);
 
     if (num_to_kill > num_invaders) {
@@ -404,27 +426,24 @@ double invader_death_rate() {
 
 
 void invader_ode() {
-    // antibody_count += num_plasma * 2000; 
-
-    // double dt = PhysiCell_settings.custom_run_interval; //10.0; //TODO import from settings
-    // double b = invader_birth_rate();
-    // double d = invader_death_rate();
-    // double r = b-d;
-
-    // num_invaders = num_invaders / (1 - r * dt);
-    num_invaders += invader_birth_rate();
-    num_invaders -= invader_death_rate();
+    num_invaders += (int)(invader_birth_rate() - invader_death_rate());
 }
 
 void record_time_series_data() {
-    std::ofstream outfile;
 
     invader_ode();
-
-    outfile.open("../num_plasma3.txt", std::ios_base::app); // append instead of overwrite
-    outfile << num_plasma << "," << num_invaders << "\n";
-
-    // printf("Wrote %f, %f", num_plasma, num_invaders);
+    
+    // #pragma omp critical
+    // printf("About to write '%d,%d'\n",num_plasma, num_invaders); 
+    // #pragma omp critical
+    // numPlasmaFile << num_plasma << "," << num_invaders << "\n";
+    
+    #pragma omp critical
+    sprintf(lineToWrite, "%d,%d\n", num_plasma, num_invaders);
+    #pragma omp critical
+    printf("About to write %s\n",lineToWrite); 
+    #pragma omp critical
+    fputs(lineToWrite, numPlasmaFile);
 }
 
 void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt ) {
@@ -455,7 +474,7 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
     }
 
         // get alignment signal
-        double hammscore = alignment ( antigenSequence,  antibodySequence , false);
+        double hammscore = 0.42; //alignment ( antigenSequence,  antibodySequence , false);
         debug_print("alignment hamming score: %g\n", hammscore);
 
 	// shodul I transform to a plasma or a memory B cell?
