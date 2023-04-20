@@ -66,30 +66,61 @@
 */
 
 #include "../core/PhysiCell.h"
-#include "../modules/PhysiCell_standard_modules.h" 
+#include "../modules/PhysiCell_standard_modules.h"
 
-using namespace BioFVM; 
+using namespace BioFVM;
 using namespace PhysiCell;
 
-// setup functions to help us along 
+
+// setup functions to help us along
 
 void create_cell_types( void );
-void setup_tissue( void ); 
+void setup_tissue( void );
 
-// set up the BioFVM microenvironment 
-void setup_microenvironment( void ); 
+// set up the BioFVM microenvironment
+void setup_microenvironment( void );
 
-// custom pathology coloring function 
+// custom pathology coloring function
 
 std::vector<std::string> my_coloring_function( Cell* );
 
-// custom functions can go here 
+// custom functions can go here
 
 void phenotype_function( Cell* pCell, Phenotype& phenotype, double dt );
 void custom_function( Cell* pCell, Phenotype& phenotype , double dt );
 
-void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& phenoOther , double dt ); 
+void contact_function( Cell* pMe, Phenotype& phenoMe , Cell* pOther, Phenotype& phenoOther , double dt );
 
-void create_naive_bcell_type( void );
-void naive_bcell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
-double alignment(Vector_Variable antigenSequence, Vector_Variable antibodySequence);
+//void create_invader_type( void );
+void create_tfhelper_cell_type( void );
+void create_bnaive_cell_type( void );
+void create_bfollicular_cell_type( void );
+//void create_bmemory_cell_type( void );
+void create_bplasma_cell_type( void );
+//void create_antibody_type( void );
+
+double inv_d(double dt);
+double inv_br(double dt);
+double inv_ode(double dt);
+
+
+
+//void invader_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+void tfhelper_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+void bnaive_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+//void bplasma_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+//void bmemory_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+//void antibody_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
+
+void run_every_timestep();
+
+template<typename... Args>
+void debug_print(Args... args);
+
+void record_time_series_data();
+std::vector<double> get_vector_variable( Cell* pCell, std::string name );
+void printSequence( std::vector<double>& sequence, std::string prefix );
+std::vector<double> generateSequence( int lenSequence );
+void mutateSequence( std::vector<double>& sequence, int mutations );
+double alignment( Vector_Variable antigenSequence, Vector_Variable antibodySequence, bool verbose);

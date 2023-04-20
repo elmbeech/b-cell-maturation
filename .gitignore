@@ -11,3 +11,6 @@ output/
 PhysiCell_settings-backup.xml
 project
 pmb_debug.log
+PhysiCell-model-builder/*
+PhysiCell/output/*
+.gitignore
