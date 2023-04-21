@@ -281,7 +281,7 @@ void create_tfhelper_cell_type(void)  {
     tfhelper_cell->custom_data.add_variable("mutate", -1.0);
     tfhelper_cell->custom_data.add_variable("hamming_fract", -1.0);
     tfhelper_cell->custom_data.add_variable("pressure_fract", -1.0);
-    //tfhelper_cell->custom_data.add_variable("apoptosis", -1.0);
+    tfhelper_cell->custom_data.add_variable("apoptosis", -1.0);
     tfhelper_cell->custom_data.add_variable("apoptosis_fract", -1.0);
     tfhelper_cell->custom_data.add_variable("b_anchor", 0.0);
 
@@ -361,7 +361,7 @@ void create_bnaive_cell_type(void)  {
     bnaive_cell->custom_data.add_variable("mutate", -1.0);
     bnaive_cell->custom_data.add_variable("hamming_fract", -1.0);
     bnaive_cell->custom_data.add_variable("pressure_fract", -1.0);
-    //bnaive_cell->custom_data.add_variable("apoptosis", -1.0);
+    bnaive_cell->custom_data.add_variable("apoptosis", -1.0);
     bnaive_cell->custom_data.add_variable("apoptosis_fract", -1.0);
 
     // update phenotype
@@ -410,7 +410,7 @@ void create_bfollicular_cell_type(void)  {
     bfollicular_cell->custom_data.add_variable("mutate", -1.0);
     bfollicular_cell->custom_data.add_variable("hamming_fract", -1.0);
     bfollicular_cell->custom_data.add_variable("pressure_fract", -1.0);
-    //bfollicular_cell->custom_data.add_variable("apoptosis", -1.0);
+    bfollicular_cell->custom_data.add_variable("apoptostic", -1.0);
     bfollicular_cell->custom_data.add_variable("apoptosis_fract", -1.0);
 
     // update phenotype
@@ -477,9 +477,9 @@ void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
             double fracPressure = linear_response_function(pressure, s0Pressure, s1Pressure);  // value between 0 and 1
             pCell->custom_data["pressure_fract"] = fracPressure;
 
-            // get and output apoptosis
-            //double apoptosis = get_single_signal(pCell, "apoptosis");
-            //pCell->custom_data["apoptosis"] = apoptosis;
+            // get and output apoptosis state value
+            double apoptosis = get_single_behavior(pCell, "apoptosis");
+            pCell->custom_data["apoptosis"] = apoptosis;
 
             // set and output apoptosis rate
             // default min rate value for apoptosis is 5.31667e-05 [1/min]
@@ -514,7 +514,7 @@ void create_bplasma_cell_type( void )  {
     bplasma_cell->custom_data.add_variable("mutate", -1.0);
     bplasma_cell->custom_data.add_variable("hamming_fract", -1.0);
     bplasma_cell->custom_data.add_variable("pressure_fract", -1.0);
-    //bplasma_cell->custom_data.add_variable("apoptosis", -1.0);
+    bplasma_cell->custom_data.add_variable("apoptosis", -1.0);
     bplasma_cell->custom_data.add_variable("apoptosis_fract", -1.0);
 
     // update phenotype
