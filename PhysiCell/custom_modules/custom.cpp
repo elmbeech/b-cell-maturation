@@ -95,7 +95,7 @@ static const int LEN_VECTOR_SEQUENCE = 24;
 static const int LEN_ANTIBODY_SEQUENCE = 24;
 static const int LEN_ANTIGEN_SEQUENCE = 24;
 static const int LEN_AMINOCOMPLETE = 16;  // number of matching antigen antibody amino sequences that account for 100% affinity.
-static const double MUTATION_PER_SEQUENCE = 5.0;  // number antibody sequence mutations per follicular B cell division.
+static const double MUTATION_PER_SEQUENCE = 3.0;  // number antibody sequence mutations per follicular B cell division.
 static const double MUTATION_CHANCE = 0.5;  // about every daugther cell mutates.
 static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.
 
@@ -268,15 +268,20 @@ std::vector<double> get_vector_variable( Cell* pCell, std::string name ) {
 void create_tfhelper_cell_type(void)  {
     tfhelper_cell = find_cell_definition("Tf_helper");
 
+    // custom vector variable antigen
     std::vector<double> antigenSequence = generateSequence(LEN_ANTIGEN_SEQUENCE);
     tfhelper_cell->custom_data.add_vector_variable("antigenSequence", antigenSequence);
-
+    // custom vector variable antibody
     std::vector<double> antibodySequence = EMPTY_VECTOR;
     tfhelper_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
-
     // custom variables
     tfhelper_cell->custom_data.add_variable("mutate", -1.0);
+    tfhelper_cell->custom_data.add_variable("hamming_fract", -1.0);
+    tfhelper_cell->custom_data.add_variable("pressure_fract", -1.0);
+    //tfhelper_cell->custom_data.add_variable("apoptosis", -1.0);
+    tfhelper_cell->custom_data.add_variable("apoptosis_fract", -1.0);
 
+    // update phenotype
     tfhelper_cell->functions.update_phenotype = tfhelper_cell_phenotype;
 }
 
@@ -323,16 +328,18 @@ void create_bnaive_cell_type(void)  {
     // from xml
     bnaive_cell = find_cell_definition("B_naive");
 
-    // antigen variablae
+    // custom vector variable antigen
     std::vector<double> antigenSequence = EMPTY_VECTOR;
     bnaive_cell->custom_data.add_vector_variable("antigenSequence", antigenSequence);
-
-    // antibody variable
+    // custom vector variable antibody
     std::vector<double> antibodySequence = EMPTY_VECTOR;
     bnaive_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
-
     // custom variables
     bnaive_cell->custom_data.add_variable("mutate", -1.0);
+    bnaive_cell->custom_data.add_variable("hamming_fract", -1.0);
+    bnaive_cell->custom_data.add_variable("pressure_fract", -1.0);
+    //bnaive_cell->custom_data.add_variable("apoptosis", -1.0);
+    bnaive_cell->custom_data.add_variable("apoptosis_fract", -1.0);
 
     // update phenotype
     bnaive_cell->functions.update_phenotype = bnaive_cell_phenotype;
@@ -367,19 +374,19 @@ void create_bfollicular_cell_type(void)  {
     // from xml
     bfollicular_cell = find_cell_definition("B_follicular");
 
-    // antigen variablae
+    // custem vector variable antigen
     std::vector<double> antigenSequence = EMPTY_VECTOR;
     bfollicular_cell->custom_data.add_vector_variable("antigenSequence", antigenSequence);
-
-    // antibody variable
+    // custom vector variable antibody
     std::vector<double> antibodySequence = EMPTY_VECTOR;
     bfollicular_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
-
     // custom variables
     bfollicular_cell->custom_data.add_variable("mutate", -1.0);
-    bfollicular_cell->custom_data.add_variable("hamming_fact", 0.0);
-    bfollicular_cell->custom_data.add_variable("pressure_fact", 0.0);
-    bfollicular_cell->custom_data.add_variable("apoptosis_fact", 0.0);
+    bfollicular_cell->custom_data.add_variable("hamming_fract", -1.0);
+    bfollicular_cell->custom_data.add_variable("pressure_fract", -1.0);
+    //bfollicular_cell->custom_data.add_variable("apoptosis", -1.0);
+    bfollicular_cell->custom_data.add_variable("apoptosis_fract", -1.0);
+
     // update phenotype
     bfollicular_cell->functions.update_phenotype = bfollicular_cell_phenotype;
 }
@@ -430,9 +437,6 @@ void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
         //pCell->custom_data.variables[hammingIndex].value = hammscore;
         pCell->custom_data["hamming_fract"] = fracHamming;
 
-        // get apoptosis signal
-        //double apoptosis = get_single_signal(pCell, "apoptosis");  // is this already output??
-
         // should I transform to a plasma or a memory B cell?
         if (fracHamming > 0.9) {
             printf("Yay, high hamming score, transform to B_plasma cell!\n");
@@ -445,9 +449,13 @@ void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
             double s0Pressure {0.0};  // min pressure
             double s1Pressure {10.0};  // max pressure evaluated by measurement
             double fracPressure = linear_response_function(pressure, s0Pressure, s1Pressure);  // value between 0 and 1
-            pCell->custom_data["pressure_fact"] = fracPressure;
+            pCell->custom_data["pressure_fract"] = fracPressure;
 
-            // set appoptosis rate
+            // get and output apoptosis
+            //double apoptosis = get_single_signal(pCell, "apoptosis");
+            //pCell->custom_data["apoptosis"] = apoptosis;
+
+            // set and output apoptosis rate
             // default min rate value for apoptosis is 5.31667e-05 [1/min]
             // this means the probabiliry to die in a 60 min time setp is 60[min] * 5.31667e-05[1/min] = 0.003190002 (~ 3 per mille)
             double s0Apoptosis = get_single_base_behavior(pCell, "apoptosis" );  // min pressure
@@ -456,9 +464,7 @@ void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
             //double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure - fracHamming) / 2;
             double fracApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * fracPressure * (1 - fracHamming);
             set_single_behavior(pCell, "apoptosis" , fracApoptosis);
-
-            // output
-            pCell->custom_data["apoptosis_fact"] = fracApoptosis;
+            pCell->custom_data["apoptosis_fract"] = fracApoptosis;
         }
     }
 }
@@ -469,22 +475,23 @@ void create_bplasma_cell_type( void )  {
     // from xml
     bplasma_cell = find_cell_definition("B_plasma");
 
-    // antigen variablae
+    // custom vector variable antigen
     std::vector<double> antigenSequence = EMPTY_VECTOR;
     bplasma_cell->custom_data.add_vector_variable("antigenSequence", antigenSequence);
-
-    // antibody variable
+    // custom vector variable antibody
     std::vector<double> antibodySequence = EMPTY_VECTOR;
     bplasma_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
-
     // custom variables
     bplasma_cell->custom_data.add_variable("mutate", -1.0);
+    bplasma_cell->custom_data.add_variable("hamming_fract", -1.0);
+    bplasma_cell->custom_data.add_variable("pressure_fract", -1.0);
+    //bplasma_cell->custom_data.add_variable("apoptosis", -1.0);
+    bplasma_cell->custom_data.add_variable("apoptosis_fract", -1.0);
 
     // update phenotype
     bplasma_cell->functions.update_phenotype = NULL;
     //bplasma_cell->functions.update_phenotype = bplasma_cell_phenotype;  // TODO
 }
-
 
 
 // print antibody/antigen sequence
