@@ -331,10 +331,8 @@ void tfhelper_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
 
 // Executes every time step?
 void tfhelper_cell_custom(Cell* pCell, Phenotype& phenotype , double dt) {
-    if (pCell->custom_data["b_anchor"] == 1.0) {
-        int coordinateAnchorIndex = pCell->custom_data.find_vector_variable_index("coordinateAnchor");
-        pCell->velocity -= pCell->custom_data["b_anchor"] * (pCell->position - pCell->custom_data.vector_variables[coordinateAnchorIndex].value);
-    }
+    int coordinateAnchorIndex = pCell->custom_data.find_vector_variable_index("coordinateAnchor");
+    pCell->velocity -= pCell->custom_data["b_anchor"] * (pCell->position - pCell->custom_data.vector_variables[coordinateAnchorIndex].value);
 }
 
 // naive B cell
