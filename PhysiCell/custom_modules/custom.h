@@ -107,6 +107,8 @@ void bfollicular_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt )
 //void bmemory_cell_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
 //void antibody_phenotype( Cell* pCell, Phenotype& phenotype , double dt );
 
+void tfhelper_cell_custom( Cell* pCell, Phenotype& phenotype , double dt );
+
 std::vector<double> get_vector_variable( Cell* pCell, std::string name );
 void printSequence( std::vector<double>& sequence, std::string prefix );
 std::vector<double> generateSequence( int lenSequence );

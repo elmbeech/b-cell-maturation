@@ -274,16 +274,23 @@ void create_tfhelper_cell_type(void)  {
     std::vector<double> antibodySequence = EMPTY_VECTOR;
     tfhelper_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
 
+    std::vector<double> coordinateAnchor = { PAD, PAD, PAD };
+    tfhelper_cell->custom_data.add_vector_variable("coordinateAnchor", coordinateAnchor);
+
     // custom variables
     tfhelper_cell->custom_data.add_variable("mutate", -1.0);
+    tfhelper_cell->custom_data.add_variable("b_anchor", 0.0);
 
     tfhelper_cell->functions.update_phenotype = tfhelper_cell_phenotype;
+    tfhelper_cell->functions.custom_cell_rule = tfhelper_cell_custom;
 }
 
 void tfhelper_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
     std::vector<double> foreignAntigen = get_vector_variable(pCell, "antigenSequence");
     //int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
     //Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
+
+    int coordinateAnchorIndex = pCell->custom_data.find_vector_variable_index("coordinateAnchor");
 
     int numTouching = pCell->state.neighbors.size();
     for (int i = 0; i < numTouching; i++) {
@@ -294,15 +301,20 @@ void tfhelper_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
             //pCell->is_movable = false;
             //pCell->functions.update_phenotype = NULL;
             //neighbor->is_movable = false;
+
+            // Anchor the cell
+            //  Here we just get the position for the anchor and set b_anchor to 1
+            pCell->custom_data["b_anchor"] = 1.0;
+            pCell->custom_data.vector_variables[coordinateAnchorIndex].value = pCell->position;
+
             //transfer antigen to B cell
             int antigenIndex = neighbor->custom_data.find_vector_variable_index("antigenSequence");
             neighbor->custom_data.vector_variables[antigenIndex].value = foreignAntigen;
             // break out of the for loop
-            set_single_behavior(pCell, "apoptosis", 9e9);
             break;
         }
     }
-
+    
     // increase migration bias in higher quorum factor
     double q = get_single_signal( pCell, "Quorum_factor");
     double b0 = get_single_base_behavior( pCell, "migration bias");
@@ -317,6 +329,13 @@ void tfhelper_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
     //set_single_behavior( pCell , "migration speed" , s );
 }
 
+// Executes every time step?
+void tfhelper_cell_custom(Cell* pCell, Phenotype& phenotype , double dt) {
+    if (pCell->custom_data["b_anchor"] == 1.0) {
+        int coordinateAnchorIndex = pCell->custom_data.find_vector_variable_index("coordinateAnchor");
+        pCell->velocity -= pCell->custom_data["b_anchor"] * (pCell->position - pCell->custom_data.vector_variables[coordinateAnchorIndex].value);
+    }
+}
 
 // naive B cell
 void create_bnaive_cell_type(void)  {
@@ -330,6 +349,9 @@ void create_bnaive_cell_type(void)  {
     // antibody variable
     std::vector<double> antibodySequence = EMPTY_VECTOR;
     bnaive_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
+
+    std::vector<double> coordinateAnchor = { PAD, PAD, PAD };
+    bnaive_cell->custom_data.add_vector_variable("coordinateAnchor", coordinateAnchor);
 
     // custom variables
     bnaive_cell->custom_data.add_variable("mutate", -1.0);
@@ -374,6 +396,9 @@ void create_bfollicular_cell_type(void)  {
     // antibody variable
     std::vector<double> antibodySequence = EMPTY_VECTOR;
     bfollicular_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
+
+    std::vector<double> coordinateAnchor = { PAD, PAD, PAD };
+    bfollicular_cell->custom_data.add_vector_variable("coordinateAnchor", coordinateAnchor);
 
     // custom variables
     bfollicular_cell->custom_data.add_variable("mutate", -1.0);
@@ -476,6 +501,9 @@ void create_bplasma_cell_type( void )  {
     // antibody variable
     std::vector<double> antibodySequence = EMPTY_VECTOR;
     bplasma_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
+
+    std::vector<double> coordinateAnchor = { PAD, PAD, PAD };
+    bplasma_cell->custom_data.add_vector_variable("coordinateAnchor", coordinateAnchor);
 
     // custom variables
     bplasma_cell->custom_data.add_variable("mutate", -1.0);
