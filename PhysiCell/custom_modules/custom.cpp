@@ -103,10 +103,20 @@ static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // ge
 //static const std::vector<double> EMPTY_VECTOR {PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD};
 //static const std::vector<double> AGENSEQ_VECTOR {'a','t','c','g','a','a','t','t','c','c','g','g','a','t','c','g'};
 
-
 // specify equal probabilities to choose from ALPHABET with choose_event
 size_t alphabetLength = sizeof(ALPHABET) / sizeof(ALPHABET[0]);
 std::vector<double> probabilities(alphabetLength, 1.0 / alphabetLength);
+
+// set global variables
+double num_inv = 1;
+int num_bplasma = 0;
+
+// print mode
+static const bool VERBOSE = true;
+template <typename... Args>
+void printv(Args... args) {
+    if (VERBOSE == true) printf(args...);
+}
 
 
 void create_cell_types( void )
@@ -384,7 +394,7 @@ void bnaive_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
         set_single_behavior(pCell, "transform to B_follicular", 9e9);
 
         // print
-        printf("\nCell ID %d: Yay, got antigen, transform to B_follicular cell!\n", pCell->ID);
+        printv("\nCell ID %d: Yay, got antigen, transform to B_follicular cell!\n", pCell->ID);
         printSequence(antigenSequence.value, "Antigen: ");
         Vector_Variable antibodySequence = pCell->custom_data.vector_variables[antibodyIndex];
         printSequence(antibodySequence.value, "Antibody: ");
@@ -432,13 +442,13 @@ void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
         double generationTime = phenotype.cycle.data.elapsed_time_in_phase;
         if (generationTime < 60.0) {  // elapsed_time_in_phase is in [min]
             if (pCell->custom_data["mutate"]  < -0.5) {
-                printf("Cell ID %d: just divided, %g[min] ago.\n", pCell->ID, generationTime);
+                printv("Cell ID %d: just divided, %g[min] ago.\n", pCell->ID, generationTime);
                 std::vector<double> flip {1 - MUTATION_CHANCE, MUTATION_CHANCE};
                 int choice = choose_event(flip);
                 if (choice == 0) { pCell->custom_data["mutate"]  = 0.0; }
                 else { pCell->custom_data["mutate"] = MUTATION_PER_SEQUENCE; }
             }
-            printf("Cell ID %d: mutation to go: %d\n", pCell->ID, (int)pCell->custom_data["mutate"]);
+            printv("Cell ID %d: mutation to go: %d\n", pCell->ID, (int)pCell->custom_data["mutate"]);
             if (pCell->custom_data["mutate"] > 0.5) {
                 printSequence(antigenSequence.value, "Antigen: ");
                 printSequence(antibodySequence.value, "Antibody: ");
@@ -450,7 +460,7 @@ void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
             else {
                 printSequence(antigenSequence.value, "Antigen: ");
                 printSequence(antibodySequence.value, "Antibody: ");
-                printf("No mutation!\n");
+                printv("No mutation!\n");
             }
         }
         else {
@@ -465,8 +475,9 @@ void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
 
         // should I transform to a plasma or a memory B cell?
         if (fracHamming > 0.9) {
-            printf("Yay, high hamming score, transform to B_plasma cell!\n");
+            printv("Yay, high hamming score, transform to B_plasma cell!\n");
             set_single_behavior(pCell, "transform to B_plasma", 9e9);
+            num_bplasma += 1;
         }
         else {
             // get pressure signal
@@ -525,15 +536,15 @@ void create_bplasma_cell_type( void )  {
 
 // print antibody/antigen sequence
 void printSequence( std::vector<double>& sequence, std::string prefix = "sequence: " ) {
-    for (char element : prefix) printf("%c", element);
+    for (char element : prefix) printv("%c", element);
     for (double element : sequence) {
         if (element == PAD) {
-            printf("{%d}", (int)element);
+            printv("{%d}", (int)element);
         } else {
-            printf("{%c}", (int)element);
+            printv("{%c}", (int)element);
         }
     }
-    printf("\n");
+    printv("\n");
 }
 
 
@@ -633,26 +644,26 @@ double alignment(Vector_Variable antigenSequence, Vector_Variable antibodySequen
     int i_padded = paddedSequence.size() - i_slide;
 
     for (size_t i=0; i <= i_padded; i++) {
-        if (verbose) printf("Sequence intersection: ***");
+        if (verbose) printv("Sequence intersection: ***");
         double i_hammdist = 0.0;
         for (size_t j=i; j < (i + i_slide); j++) {
             if (paddedSequence[j] == slideSequence[j-i]) {
                 i_hammdist = i_hammdist + 1.0;
             }
             if (verbose) {
-                if ((int) paddedSequence[j] == PAD) printf("{%d}", (int) paddedSequence[j]);
-                else printf("{%c}", (int) paddedSequence[j]);
+                if ((int) paddedSequence[j] == PAD) printv("{%d}", (int) paddedSequence[j]);
+                else printv("{%c}", (int) paddedSequence[j]);
             }
         }
         if (i_hammdist_max < i_hammdist) {
             i_hammdist_max = i_hammdist;
         }
-        if (verbose) printf("*** hamming distance: %g.\n", i_hammdist);
+        if (verbose) printv("*** hamming distance: %g.\n", i_hammdist);
     }
 
     // calcualte hamming distance score.
     if (i_slide < LEN_AMINOCOMPLETE) {
-        printf("Warning : LEN_AMINOCOMPLETE {%d} is greater than the smaller squence {%d}, hamming score can never reach 1!\n", (int) LEN_AMINOCOMPLETE, i_slide);
+        printv("Warning : LEN_AMINOCOMPLETE {%d} is greater than the smaller squence {%d}, hamming score can never reach 1!\n", (int) LEN_AMINOCOMPLETE, i_slide);
     }
 
     double r_hammscore = i_hammdist_max / LEN_AMINOCOMPLETE;
@@ -661,7 +672,6 @@ double alignment(Vector_Variable antigenSequence, Vector_Variable antibodySequen
     }
 
     // output
-    if (verbose) printf("Sequence intersection: ***");
-    //printf("hamming distance score: %g.\n", r_hammscore);
+    if (verbose) printv("hamming distance score: %g.\n", r_hammscore);
     return(r_hammscore);
 }
