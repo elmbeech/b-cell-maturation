@@ -304,6 +304,7 @@ void tfhelper_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
 
             // Anchor the cell
             //  Here we just get the position for the anchor and set b_anchor to 1
+            pCell->phenotype.motility.is_motile = false;
             pCell->custom_data["b_anchor"] = 1.0;
             pCell->custom_data.vector_variables[coordinateAnchorIndex].value = pCell->position;
 
