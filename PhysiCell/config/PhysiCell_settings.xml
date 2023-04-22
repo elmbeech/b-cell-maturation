@@ -14,7 +14,7 @@
     </domain>
 
     <overall>
-        <max_time units="min">7400</max_time>
+        <max_time units="min">20160</max_time>
         <time_units>min</time_units>
         <space_units>micron</space_units>
         <dt_diffusion units="min">0.01</dt_diffusion>
@@ -23,7 +23,7 @@
     </overall>
 
     <parallel>
-        <omp_num_threads>6</omp_num_threads>
+        <omp_num_threads>8</omp_num_threads>
     </parallel>
 
     <save>
@@ -34,12 +34,8 @@
         </full_data>
         <SVG>
             <interval units="min">60</interval>
-            <enable>false</enable>
-        </SVG>
-        <custom_run>
-            <interval units="min">120</interval>
             <enable>true</enable>
-        </custom_run>
+        </SVG>
         <legacy_data>
             <enable>false</enable>
         </legacy_data>

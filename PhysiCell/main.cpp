@@ -83,6 +83,79 @@
 using namespace BioFVM;
 using namespace PhysiCell;
 
+// ode
+extern double num_inv;
+extern int num_bplasma;
+double ode_dt = 120; // min timestep
+double next_custom_run_time = 0;
+
+double last_num_invaders_before_doubling = num_inv;
+double hoursElapsed = 0;
+double inv_birth() {
+    //Double the invaders every 24 hours (1440 min)
+    double new_num_cells = num_inv * pow(2, ode_dt / 1440.0);
+    hoursElapsed += ode_dt / 60.0f;
+    if (hoursElapsed >= 24) {
+        hoursElapsed = 0;
+    }
+    return new_num_cells - num_inv;
+}
+
+double inv_death() {
+    if (num_bplasma == 0)
+        return 0;
+
+    // double num_to_kill = 100.0 / (1 + exp(-0.3 * (num_bplasma - 16))); //arbitrary logistic function
+
+    //The numerator is the max number to kill every hour.
+    //Besides that, this logistic function is arbitrary.
+    double num_to_kill = -30 + 200.0 / (1 + exp(-0.1 * (num_bplasma - 16)));
+    num_to_kill *= ode_dt / 60.0f; //adjust the num to kill for every hour to the num to kill in this timestep
+    
+    return num_to_kill;
+}
+
+void inv_ode() {
+    double b = inv_birth();
+    double d = inv_death();
+    
+    printf("num_inv: %f\n", num_inv);
+    // printf("num_bplasma: %d\n", num_bplasma);
+    // printf("the birth rate is: %f\n", b);
+    // printf("the death rate is: %f\n", d);
+    
+    // double r = b-d;  // simple ODE invaders
+    // num_inv = num_inv / (1 - r*dt);  // saftey check for 0/(1-r*dt) logitic ODE for invaders
+    
+    num_inv += b;
+    num_inv -= d;
+    
+    if(num_inv < 0){
+        num_inv = 0;
+    }
+}
+
+bool erase = true;
+void record_time_series_data() {
+    std::ofstream outfile;
+    if (erase) {
+        erase = false;
+        outfile.open("bplasma_invaders.csv");  // overwrite
+    }
+    else {
+        outfile.open("bplasma_invaders.csv", std::ios_base::app);  // append instead of overwrite
+    }
+    outfile << PhysiCell_globals.current_time << "," << num_bplasma << "," << round(num_inv) << "\n";
+    outfile.close();
+}
+
+void run_every_timestep() {
+    inv_ode();
+    record_time_series_data();
+}
+
+
+// main
 int main( int argc, char* argv[] )
 {
 	// load and parse settings file(s)
@@ -161,64 +234,64 @@ int main( int argc, char* argv[] )
 	
 	// set the performance timers 
 
-	BioFVM::RUNTIME_TIC();
-	BioFVM::TIC();
-	
-	std::ofstream report_file;
-	if( PhysiCell_settings.enable_legacy_saves == true )
-	{	
-		sprintf( filename , "%s/simulation_report.txt" , PhysiCell_settings.folder.c_str() ); 
-		
-		report_file.open(filename); 	// create the data log file 
-		report_file<<"simulated time\tnum cells\tnum division\tnum death\twall time"<<std::endl;
-	}
-	
-	// main loop 
-	
-	try 
-	{		
-		while( PhysiCell_globals.current_time < PhysiCell_settings.max_time + 0.1*diffusion_dt )
-		{
-			// save data if it's time. 
-			if( fabs( PhysiCell_globals.current_time - PhysiCell_globals.next_full_save_time ) < 0.01 * diffusion_dt )
-			{
-				display_simulation_status( std::cout ); 
-				if( PhysiCell_settings.enable_legacy_saves == true )
-				{	
-					log_output( PhysiCell_globals.current_time , PhysiCell_globals.full_output_index, microenvironment, report_file);
-				}
-				
-				if( PhysiCell_settings.enable_full_saves == true )
-				{	
-					sprintf( filename , "%s/output%08u" , PhysiCell_settings.folder.c_str(),  PhysiCell_globals.full_output_index ); 
-					
-					save_PhysiCell_to_MultiCellDS_v2( filename , microenvironment , PhysiCell_globals.current_time ); 
-				}
-				
-				PhysiCell_globals.full_output_index++; 
-				PhysiCell_globals.next_full_save_time += PhysiCell_settings.full_save_interval;
-			}
-			
-			// save SVG plot if it's time
-			if( fabs( PhysiCell_globals.current_time - PhysiCell_globals.next_SVG_save_time  ) < 0.01 * diffusion_dt )
-			{
-				if( PhysiCell_settings.enable_SVG_saves == true )
-				{	
-					sprintf( filename , "%s/snapshot%08u.svg" , PhysiCell_settings.folder.c_str() , PhysiCell_globals.SVG_output_index ); 
-					SVG_plot( filename , microenvironment, 0.0 , PhysiCell_globals.current_time, cell_coloring_function );
-					
-					PhysiCell_globals.SVG_output_index++; 
-					PhysiCell_globals.next_SVG_save_time  += PhysiCell_settings.SVG_save_interval;
-				}
-				// printf("Time %f\n", PhysiCell_globals.next_SVG_save_time);
-			}
+    BioFVM::RUNTIME_TIC();
+    BioFVM::TIC();
 
-			//custom logic
-			if( fabs( PhysiCell_globals.current_time - PhysiCell_globals.next_custom_run_time  ) < 0.01 * diffusion_dt )
-			{
-				run_every_timestep();
-				PhysiCell_globals.next_custom_run_time += PhysiCell_settings.custom_run_interval;
-			}
+    std::ofstream report_file;
+    if( PhysiCell_settings.enable_legacy_saves == true )
+    {
+        sprintf( filename , "%s/simulation_report.txt" , PhysiCell_settings.folder.c_str() );
+
+        report_file.open(filename);     // create the data log file
+        report_file<<"simulated time\tnum cells\tnum division\tnum death\twall time"<<std::endl;
+    }
+
+    // main loop
+
+    try
+    {
+        while( PhysiCell_globals.current_time < PhysiCell_settings.max_time + 0.1*diffusion_dt )
+        {
+            // save data if it's time.
+            if( fabs( PhysiCell_globals.current_time - PhysiCell_globals.next_full_save_time ) < 0.01 * diffusion_dt )
+            {
+                display_simulation_status( std::cout );
+                if( PhysiCell_settings.enable_legacy_saves == true )
+                {
+                    log_output( PhysiCell_globals.current_time , PhysiCell_globals.full_output_index, microenvironment, report_file);
+                }
+
+                if( PhysiCell_settings.enable_full_saves == true )
+                {
+                    sprintf( filename , "%s/output%08u" , PhysiCell_settings.folder.c_str(),  PhysiCell_globals.full_output_index );
+
+                    save_PhysiCell_to_MultiCellDS_v2( filename , microenvironment , PhysiCell_globals.current_time );
+                }
+
+                PhysiCell_globals.full_output_index++;
+                PhysiCell_globals.next_full_save_time += PhysiCell_settings.full_save_interval;
+            }
+
+            // save SVG plot if it's time
+            if( fabs( PhysiCell_globals.current_time - PhysiCell_globals.next_SVG_save_time  ) < 0.01 * diffusion_dt )
+            {
+                if( PhysiCell_settings.enable_SVG_saves == true )
+                {
+                    sprintf( filename , "%s/snapshot%08u.svg" , PhysiCell_settings.folder.c_str() , PhysiCell_globals.SVG_output_index );
+                    SVG_plot( filename , microenvironment, 0.0 , PhysiCell_globals.current_time, cell_coloring_function );
+
+                    PhysiCell_globals.SVG_output_index++;
+                    PhysiCell_globals.next_SVG_save_time += PhysiCell_settings.SVG_save_interval;
+                }
+            }
+
+            //custom logic
+            if( fabs( PhysiCell_globals.current_time - next_custom_run_time) < 0.01 * diffusion_dt )
+            {
+                run_every_timestep();
+                next_custom_run_time += ode_dt;
+            }
+
 
 			// update the microenvironment
 			microenvironment.simulate_diffusion_decay( diffusion_dt );
@@ -243,8 +316,6 @@ int main( int argc, char* argv[] )
 	{ // reference to the base of a polymorphic object
 		std::cout << e.what(); // information from length_error printed
 	}
-
-	final_cleanup();
 	
 	// save a final simulation snapshot 
 	
