@@ -91,10 +91,10 @@ static const double ALPHABET[] {'a','t','c','g'};  // oligo nucleotide alphabet
 static const double PAD = 0;
 
 // LEN_VECTOR_SEQUENCE >= max(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= min(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= LEN_AMINOCOMPLETE
-static const int LEN_VECTOR_SEQUENCE = 24;
-static const int LEN_ANTIBODY_SEQUENCE = 24;
-static const int LEN_ANTIGEN_SEQUENCE = 24;
-static const int LEN_AMINOCOMPLETE = 16;  // number of matching antigen antibody amino sequences that account for 100% affinity.
+static const int LEN_VECTOR_SEQUENCE = 16;
+static const int LEN_ANTIBODY_SEQUENCE = 16;
+static const int LEN_ANTIGEN_SEQUENCE = 16;
+static const int LEN_AMINOCOMPLETE = 10;  // number of matching antigen antibody amino sequences that account for 100% affinity.
 static const double MUTATION_PER_SEQUENCE = 3.0;  // number antibody sequence mutations per follicular B cell division.
 static const double MUTATION_CHANCE = 0.5;  // about every daugther cell mutates.
 static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.
