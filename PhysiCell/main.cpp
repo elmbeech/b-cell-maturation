@@ -90,26 +90,31 @@ extern int num_bplasma;
 double dt = 10; // min timestep
 double next_custom_run_time = 0;
 
-double last_num_invaders_before_doubling = num_inv;
-double hoursElapsed = 0;
-double inv_birth() {
-    double b = last_num_invaders_before_doubling * pow(2, (hoursElapsed / 24.0));
-    if ((int)hoursElapsed % 24 == 0) {
-        last_num_invaders_before_doubling = b;
-        hoursElapsed = 0;
+double b = 0;
+double num_inv_before_doubling = num_inv;
+double minutesDoubling = 1440.0;
+double minutesElapsed = 0;
+double inv_birth_rate() {
+    num_inv = num_inv_before_doubling * pow(2, (minutesElapsed / minutesDoubling));
+    b = (num_inv - num_inv_before_doubling) / minutesElapsed;
+    //printf("num_inv %g; num_inv_before_doubling %g; minutesElapsed %g\n", num_inv, num_inv_before_doubling, minutesElapsed);
+    if (minutesElapsed >= minutesDoubling) {
+        num_inv_before_doubling = num_inv;
+        minutesElapsed = 0;
     }
     return(b);
 }
 
-double inv_death() {
+double inv_death_rate() {
     double d = 10.0 / (1 + exp(-0.3 * (num_bplasma - 18)));
     d = floor(d);
     return(d);  // num_to_kill
 }
 
 void inv_ode() {
-    double b = inv_birth();
-    double d = inv_death();
+    double b = inv_birth_rate();
+    double d = inv_death_rate();
+    //printf("birtrate - deadrate: %g - %g\n", b, d);
     //double num_invaders = 130.0;
     //printf("the birth rate is: %f\n", b);
     //printf("the death rate is: %f\n", d);
@@ -117,7 +122,7 @@ void inv_ode() {
     //I -= d;
     double r = b-d;  // simple ODE invaders
     num_inv = num_inv / (1 - r*dt);  // saftey check for 0/(1-r*dt) logitic ODE for invaders
-    if(num_inv < 0){
+    if (num_inv < 0){
         num_inv = 0;
     }
 }
@@ -275,8 +280,9 @@ int main( int argc, char* argv[] )
             //custom logic
             if( fabs( PhysiCell_globals.current_time - next_custom_run_time) < 0.01 * diffusion_dt )
             {
-                run_every_timestep();
                 next_custom_run_time += dt;
+                minutesElapsed  += dt;
+                run_every_timestep();
             }
 
 

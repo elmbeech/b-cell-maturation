@@ -19,7 +19,7 @@
         <space_units>micron</space_units>
         <dt_diffusion units="min">0.01</dt_diffusion>
         <dt_mechanics units="min">0.1</dt_mechanics>
-        <dt_phenotype units="min">6</dt_phenotype>
+        <dt_phenotype units="min">4</dt_phenotype>
     </overall>
 
     <parallel>

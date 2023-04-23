@@ -112,7 +112,7 @@ double num_inv = 1;
 int num_bplasma = 0;
 
 // print mode
-static const bool VERBOSE = true;
+static const bool VERBOSE = false;
 template <typename... Args>
 void printv(Args... args) {
     if (VERBOSE == true) printf(args...);
