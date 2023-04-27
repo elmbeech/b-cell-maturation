@@ -92,20 +92,34 @@ static const double PAD = 0;
 
 // LEN_VECTOR_SEQUENCE >= max(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= min(LEN_ANTIGEN_SEQUENCE, LEN_ANTIBODY_SEQUENCE) >= LEN_AMINOCOMPLETE
 static const int LEN_VECTOR_SEQUENCE = 24;
-static const int LEN_ANTIBODY_SEQUENCE = 24;
 static const int LEN_ANTIGEN_SEQUENCE = 24;
-static const int LEN_AMINOCOMPLETE = 16;  // number of matching antigen antibody amino sequences that account for 100% affinity.
-static const double MUTATION_PER_SEQUENCE = 3.0;  // number antibody sequence mutations per follicular B cell division.
+static const int LEN_ANTIBODY_SEQUENCE = 24;
+static const int LEN_AMINOCOMPLETE = 14;  // number of matching antigen antibody amino sequences that account for 100% affinity.
+static const double MUTATION_PER_SEQUENCE = 1.0;  // number antibody sequence mutations per follicular B cell division.
 static const double MUTATION_CHANCE = 0.5;  // about every daugther cell mutates.
 static const std::vector<double> EMPTY_VECTOR (LEN_VECTOR_SEQUENCE, PAD);  // generate empty antigen antybody vector.
 
 // gereate sequence manual
 //static const std::vector<double> EMPTY_VECTOR {PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD,PAD};
-//static const std::vector<double> AGENSEQ_VECTOR {'a','t','c','g','a','a','t','t','c','c','g','g','a','t','c','g'};
+//static const std::vector<double> AGENSEQ_VECTOR {'a','t','c'};  // 3
+//static const std::vector<double> AGENSEQ_VECTOR {'a','t','c','g'};  // 4
+//static const std::vector<double> AGENSEQ_VECTOR {'a','t','c','g','a','t'};  // 6
+//static const std::vector<double> AGENSEQ_VECTOR {'a','t','c','g','a','t','c','g','a','t','c','g'};  // 12
+//static const std::vector<double> AGENSEQ_VECTOR {'a','t','c','g','a','t','c','g','a','t','c','g','a','t','c','g','a','t'};   // 18
+//static const std::vector<double> AGENSEQ_VECTOR {'a','t','c','g','a','t','c','g','a','t','c','g','a','t','c','g','a','t','c','g','a','t','c','g'};  // 24
 
 // specify equal probabilities to choose from ALPHABET with choose_event
 size_t alphabetLength = sizeof(ALPHABET) / sizeof(ALPHABET[0]);
 std::vector<double> probabilities(alphabetLength, 1.0 / alphabetLength);
+
+// pressure settings
+double PRESSURE_MIN {0};
+double PRESSURE_MAX {16};
+double PRESSURE_SLOPE {1388.889};  // we specify, at max 98% of the cells should enter apoptosis within PRESSURE_SLOPE [min], this specifies the steepness.
+
+// ctrl
+bool HAMMING_APOCTRL {true};   // is the hamming distance stering appoptosis rate?
+bool PRESSURE_APOCTRL {true};   // is pressure and stering appoptosis rate?
 
 // set global variables
 double num_inv = 1;
@@ -359,13 +373,14 @@ void create_bnaive_cell_type(void)  {
     bnaive_cell = find_cell_definition("B_naive");
 
     // custom vector variable antigen
+    //std::vector<double> antigenSequence = AGENSEQ_VECTOR;
     std::vector<double> antigenSequence = EMPTY_VECTOR;
     bnaive_cell->custom_data.add_vector_variable("antigenSequence", antigenSequence);
     // custom vector variable antibody
     std::vector<double> antibodySequence = EMPTY_VECTOR;
     bnaive_cell->custom_data.add_vector_variable("antibodySequence", antibodySequence);
     // custom vector variable anker
-    std::vector<double> coordinateAnchor = { PAD, PAD, PAD };
+    std::vector<double> coordinateAnchor = {PAD, PAD, PAD};
     bnaive_cell->custom_data.add_vector_variable("coordinateAnchor", coordinateAnchor);
     // custom variables
     bnaive_cell->custom_data.add_variable("mutate", -1.0);
@@ -383,7 +398,7 @@ void bnaive_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
     // antigen sequence
     int antigenIndex = pCell->custom_data.find_vector_variable_index("antigenSequence");
     Vector_Variable antigenSequence = pCell->custom_data.vector_variables[antigenIndex];
-
+    printSequence(antigenSequence.value, "BUE ANTIGEN: ");
     // shodul I transform to follicular B cell?
     if (antigenSequence.value != EMPTY_VECTOR) {
         // antibody sequence
@@ -483,8 +498,8 @@ void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
             // get pressure signal
             double pressure = get_single_signal(pCell, "pressure");
             // get pressure respons
-            double s0Pressure {0.0};  // min pressure
-            double s1Pressure {10.0};  // max pressure evaluated by measurement
+            double s0Pressure = PRESSURE_MIN;  // min pressure
+            double s1Pressure = PRESSURE_MAX;  // max pressure evaluated by measurement
             double fracPressure = linear_response_function(pressure, s0Pressure, s1Pressure);  // value between 0 and 1
             pCell->custom_data["pressure_fract"] = fracPressure;
 
@@ -496,12 +511,28 @@ void bfollicular_cell_phenotype(Cell* pCell, Phenotype& phenotype , double dt) {
             // default min rate value for apoptosis is 5.31667e-05 [1/min]
             // this means the probabiliry to die in a 60 min time setp is 60[min] * 5.31667e-05[1/min] = 0.003190002 (~ 3 per mille)
             double s0Apoptosis = get_single_base_behavior(pCell, "apoptosis" );  // min pressure
-            double s1Apoptosis = 0.98 / 60;  // we specify, at max 98% of the cells should enter apoptosis within 60 [1/min], this specifies the steepness
-            //double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * rPressure;
-            //double rApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * (rPressure - fracHamming) / 2;
-            double fracApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * fracPressure * (1 - fracHamming);
-            set_single_behavior(pCell, "apoptosis" , fracApoptosis);
+            double s1Apoptosis = 1.0 / PRESSURE_SLOPE;  // we specify, at max 98% of the cells should enter apoptosis within 60 [1/min], this specifies the steepness
+
+            // control
+            double fracApoptosis = 0.0;
+            if ((PRESSURE_APOCTRL == false) and (HAMMING_APOCTRL == false)) {
+            }
+            else if ((PRESSURE_APOCTRL == false) and (HAMMING_APOCTRL == true)) {
+                fracApoptosis = (1 - fracHamming);
+            }
+            else if ((PRESSURE_APOCTRL == true) and (HAMMING_APOCTRL == false)) {
+                fracApoptosis = fracPressure;
+            }
+            else { // true true
+                //fracApoptosis = (fracPressure - fracHamming) / 2;
+                fracApoptosis = fracPressure * (1 - fracHamming);
+            }
+            double rateApoptosis = s0Apoptosis + (s1Apoptosis - s0Apoptosis) * fracApoptosis;
+
+            // set apoptosis rate
+            //printf("BUE : s0Apoptosis {%g}; fracApoptosis {%g}; rateApoptosis {%g}.", s0Apoptosis, fracApoptosis, rateApoptosis);
             pCell->custom_data["apoptosis_fract"] = fracApoptosis;
+            set_single_behavior(pCell, "apoptosis" , rateApoptosis);
         }
     }
 }
@@ -672,6 +703,7 @@ double alignment(Vector_Variable antigenSequence, Vector_Variable antibodySequen
     }
 
     // output
-    if (verbose) printv("hamming distance score: %g.\n", r_hammscore);
+    //if (verbose)
+    printv("hamming distance score: %g.\n", r_hammscore);
     return(r_hammscore);
 }

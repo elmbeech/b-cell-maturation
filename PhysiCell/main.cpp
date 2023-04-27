@@ -95,9 +95,10 @@ double num_inv_before_doubling = num_inv;
 double minutesDoubling = 1440.0;
 double minutesElapsed = 0;
 double inv_birth_rate() {
+    //double bue =  pow(2, (PhysiCell_globals.current_time / minutesDoubling));
     num_inv = num_inv_before_doubling * pow(2, (minutesElapsed / minutesDoubling));
     b = (num_inv - num_inv_before_doubling) / minutesElapsed;
-    //printf("num_inv %g; num_inv_before_doubling %g; minutesElapsed %g\n", num_inv, num_inv_before_doubling, minutesElapsed);
+    //printf("bue %g; num_inv %g; num_inv_before_doubling %g; minutesElapsed %g\n", bue, num_inv, num_inv_before_doubling, minutesElapsed);
     if (minutesElapsed >= minutesDoubling) {
         num_inv_before_doubling = num_inv;
         minutesElapsed = 0;
@@ -120,7 +121,7 @@ void inv_ode() {
     //printf("the death rate is: %f\n", d);
     //I += b;
     //I -= d;
-    double r = b-d;  // simple ODE invaders
+    double r = b - d;  // simple ODE invaders
     num_inv = num_inv / (1 - r*dt);  // saftey check for 0/(1-r*dt) logitic ODE for invaders
     if (num_inv < 0){
         num_inv = 0;
